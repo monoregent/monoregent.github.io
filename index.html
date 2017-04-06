@@ -1,0 +1,127 @@
+<!doctype html>
+ 	<html lang="en">
+		<head>
+		<meta charset="UTF-8">
+		<title>Um titulo inteligente</title>
+		<script type="text/javascript" >
+		/*Quando o a pagina carregar esta função inicializa as variaveis globais*/
+			lines = [];
+			function eventWindowLoaded () {	
+ 	      		c = document.getElementById("canvas");
+	     	 	context = c.getContext("2d"); 
+	      		document.getElementById("canvas").addEventListener('click', mousedown)
+	      		document.getElementById("canvas").addEventListener('mousemove', biteTheDust)
+	      		
+	      		lines = [];
+		    	mode = "drawLine";
+		    	numPontosLinha=0;
+		    	tempPoints = [];
+		   	}	
+
+			function Ponto(x,y){
+				this.x = x;
+				this.y = y;
+				
+				return this;
+			}
+
+			function Linha(start, end){
+				this.start = start;
+				this.end = end;
+				return this;
+			}
+
+			incomplete = false;	
+			
+
+		    function pickmode(){
+		    	mode="pickMode";
+		    	biteTheDust();
+		    }
+
+			function addClick(x,y){
+				if (mode == "drawLine"){
+					if(numPontosLinha % 2 == 0){
+						tempPoints.push(new Ponto(x,y))
+						numPontosLinha++;
+						biteTheDust();
+					}else{
+						console.log("here i am");
+						var tmpLinha = new Linha(new Ponto(tempPoints[0].x,tempPoints[0].y), new Ponto(x,y));
+						lines.push(tmpLinha);						
+						numPontosLinha ++;
+						tempPoints = [];
+						biteTheDust();
+					}			
+				}
+		    }
+
+
+
+			function mousedown(){
+	    		var mousex = event.clientX;
+	    		var mousey = event.clientY;
+	    		if(mode=="drawLine"){
+			    	addClick(mousex,mousey);
+		    		biteTheDust();
+		    	}
+		    	else if(mode == "pickMode"){
+		    		for(i=0;i<linesX.length;i+=2){
+		    			console.log("interação "+ i);
+		    			if(pick_by_dist(linesX[i],linesY[i],linesX[i+1],linesY[i+1],mousex,mousey,5)==1){
+		    				console.log("pick");
+		    				return 1;
+		    			}
+		    		}
+		    	}
+		    }
+
+		    function biteTheDust(){
+		    	context.clearRect(0, 0, canvas.width, canvas.height);
+		    	c.strokeStyle = "#df4b26";
+		    	c.lineWidth = 3;
+	    		for(var i=0;i<lines.length;i++){
+	    			context.beginPath();
+	    			context.moveTo(lines[i].start.x, lines[i].start.y);
+	    			context.lineTo(lines[i].end.x,lines[i].end.y);
+	    			context.stroke();
+	    			context.fill();
+					context.closePath();
+	    		}
+	    		for(var i = 0; i<tempPoints.length;i++){
+	    			context.beginPath();
+	    			if(i == tempPoints.length-1){
+	    				if(mode=="drawLine"){
+	    					context.moveTo(tempPoints[i].x,tempPoints[i].y);
+	    					if(numPontosLinha%2 == 0){
+	    						context.moveTo(tempPoints[0].x,tempPoints[0].y);
+	    						context.lineTo(tempPoints[1].x,tempPoints[1].y);
+	    						numPontosLinha = 0;
+	    						tempPoints = [];
+
+	    					}else{
+	    						context.lineTo(event.clientX,event.clientY);
+	    					}
+	    				}
+	    			}else{
+	    				context.moveTo(tempPoints[i].x,tempPoints[i].y);
+	    				context.lineTo(tempPoints[i+1].x,tempPoints[i+1].y);
+	    			}
+	    			
+	    			context.stroke();
+	    			context.fill();
+					context.closePath();
+	    		}
+	    	
+		    }
+		
+			window.addEventListener("load",eventWindowLoaded,false);
+		</script>
+
+		</head>
+  	<body>
+		<canvas id ="canvas" width="500" height="300" style="border:1px solid #000000;" > 
+		  
+		</canvas> 		
+  	</body>
+</html>
