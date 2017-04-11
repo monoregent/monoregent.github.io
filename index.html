@@ -113,8 +113,10 @@
 
 	    		for (var i = 0; i<poligonals.length; i++){
 	    			context.beginPath();
-	    			context.moveTo(poligonals[i].start.x, lines[i].start.y);
-	    			context.lineTo(poligonals[i].end.x,lines[i].end.y);
+	    			for(var j = 0; j< poligonals[i].length; j++){
+	    				context.moveTo(poligonals[i].lines[j].Linha.start.x, lines[i].Array[j].Linha.start.y);
+	    				context.lineTo(poligonals[i].lines[j].Linha.start.x,lines[i].Array[j].Linha.end.y);
+	    			}
 	    			context.stroke();
 	    			context.fill();
 					context.closePath();
@@ -145,14 +147,11 @@
 	    		}
 
 	    		for(var i = 0; i<tempLinesPoligonals.length; i++){
-	    			console.log("oi");
 	    			context.beginPath();
 	    			context.moveTo(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y);
 	    			if(i == tempLinesPoligonals.length-1){
-	    				console.log("mouse");
 	    				context.lineTo(event.clientX, event.clientY);
 	    			}else{
-	    				console.log("array");
 	    				context.lineTo(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y);
 	    			}
 	    			context.stroke();
