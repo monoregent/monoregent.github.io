@@ -17,8 +17,16 @@
 		    	numPontosLinha=0;
 		    	tempPoints = [];
 		    	tempLinesPoligonals = [];
+		    	tempLinesPolygons = [];
 		    	poligonals = [];
+		    	points = [];
 		    	lines = [];
+		    	polygons = [];
+
+		    	pickPointId = -1;
+		    	pickLineId = -1;
+		    	pickPoligonalId = -1;
+		    	pickPolygonId = -1;
 		   	}	
 
 			function Ponto(x,y){
@@ -38,10 +46,15 @@
 				this.lines = lines;
 				return this;
 			}
+
+			function Polygon(lines){
+				this.lines = lines;
+				return this;
+			}
 			incomplete = false;	
 			
 
-		    function pickmode(){
+		    function pickMode(){
 		    	mode="pickMode";
 		    	biteTheDust();
 		    }
@@ -50,9 +63,18 @@
 		    	biteTheDust();
 		    }
 
-		     function drawPoligonalMode(){
+		    function drawPointMode(){
+		    	mode="drawPoint";
+		    	biteTheDust();
+		    }
+
+		    function drawPoligonalMode(){
 		    	mode="drawPoligonal";
-		    	console.log("drawing poligonals");
+		    	biteTheDust();
+		    }
+
+		    function drawPolygonMode(){
+		    	mode="drawPolygon";
 		    	biteTheDust();
 		    }
 
@@ -78,24 +100,53 @@
 	    		if(mode=="drawLine"){
 			    	addClick(mousex,mousey);
 		    		biteTheDust();
+		    	}else if(mode == "drawPoint"){
+		    		points.push(new Ponto(mousex,mousey));
 		    	}
-
 		    	else if(mode == "drawPoligonal"){
-		    			tempLinesPoligonals.push(new Ponto(mousex,mousey));
-		    			incomplete = true;
-		    			biteTheDust();
-		    		}
+	    			tempLinesPoligonals.push(new Ponto(mousex,mousey));
+	    			incomplete = true;
+	    			biteTheDust();
+		    	}else if(mode == "drawPolygon"){
+		    		tempLinesPolygons.push(new Ponto(mousex,mousey));
+		    		incomplete = true;
+		    		biteTheDust();
+		    	}else if(mode == "pickMode"){
+		    		pick();
 		    	}
+		    }
+
+		    function pickPonto(){
+
+		    }
+		    
+		    function pick(){
+		    	var px = event.clientX;
+		    	var py = event.clientY;
+		    	for(var i;i<points,length;i++){
+
+		    	}
+		    }
+
 		    function rightClick(){
-		    	var poligonalTemp=[];
-		    	for(var i = 0; i<tempLinesPoligonals.length-1; i++){
-		    		poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y)));
-		    	}
-		    	poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(event.clientX, event.clientY)));
-		    	tempLinesPoligonals = [];
-		    	poligonals.push(poligonalTemp);
-		    	console.log(poligonals);
-		    	return false;
+		    	if(mode == "drawPoligonal"){
+			    	var poligonalTemp=[];
+			    	for(var i = 0; i<tempLinesPoligonals.length-1; i++){
+			    		poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y)));
+			    	}
+			    	poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(event.clientX, event.clientY)));
+			    	tempLinesPoligonals = [];
+			    	poligonals.push(poligonalTemp);
+			    }else if(mode == "drawPolygon"){
+			    	var polygonTemp = [];
+			    	for(var i = 0; i<tempLinesPolygons.length-1; i++){
+			    		polygonTemp.push(new Linha(new Ponto(tempLinesPolygons[i].x, tempLinesPolygons[i].y), new Ponto(tempLinesPolygons[i+1].x, tempLinesPolygons[i+1].y)));
+			    	}
+			    	polygonTemp.push(new Linha(new Ponto(tempLinesPolygons[i].x, tempLinesPolygons[i].y), new Ponto(event.clientX, event.clientY)));
+			    	polygonTemp.push(new Linha(new Ponto(event.clientX, event.clientY), new Ponto(tempLinesPolygons[0].x, tempLinesPolygons[0].y)));
+			    	tempLinesPolygons = [];
+			    	polygons.push(polygonTemp);
+			    }
 		    }
 
 
@@ -103,6 +154,12 @@
 		    	context.clearRect(0, 0, canvas.width, canvas.height);
 		    	c.strokeStyle = "#df4b26";
 		    	c.lineWidth = 3;
+
+		    	//
+		    	for(var i=0; i<points.length;i++){
+		    		context.strokeRect(points[i].x, points[i].y, 1, 1);
+		    	}
+		    	//Desenha linhas
 	    		for(var i=0;i<lines.length;i++){
 	    			context.beginPath();
 	    			context.moveTo(lines[i].start.x, lines[i].start.y);
@@ -111,7 +168,7 @@
 	    			context.fill();
 					context.closePath();
 	    		}
-
+	    		//Desenha Poligonais
 	    		for (var i = 0; i<poligonals.length; i++){
 	    			context.beginPath();
 	    			for(var j = 0; j< poligonals[i].length; j++){
@@ -122,6 +179,20 @@
 	    			context.fill();
 					context.closePath();
 	    		}
+
+	    		//Desenha Poligonos
+	    		for (var i = 0; i<polygons.length; i++){
+	    			context.beginPath();
+	    			for(var j = 0; j< polygons[i].length; j++){
+	    				context.moveTo(polygons[i][j].start.x, polygons[i][j].start.y);
+	    				context.lineTo(polygons[i][j].end.x,polygons[i][j].end.y);
+	    			}
+	    			context.stroke();
+	    			context.fill();
+					context.closePath();
+	    		}
+
+	    		//Desenha, se tiver, uma linha que esteja incompleta, ou seja, sendo desenhada pelo usuario.
 	    		for(var i = 0; i<tempPoints.length;i++){
 	    			context.beginPath();
 	    			if(i == tempPoints.length-1){
@@ -147,6 +218,7 @@
 					context.closePath();
 	    		}
 
+	    		//Desenha, se tiver, uma poligonal que esteja incompleta, ou seja, sendo desenhada pelo usuario.
 	    		for(var i = 0; i<tempLinesPoligonals.length; i++){
 	    			context.beginPath();
 	    			context.moveTo(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y);
@@ -158,8 +230,28 @@
 	    			context.stroke();
 	    			context.fill();
 	    			context.closePath();
+	    		}
+
+	    		//Desenha, se tiver, um poligono que esteja incompleta, ou seja, sendo desenhada pelo usuario.
+	    		for(var i = 0; i<tempLinesPolygons.length; i++){
+	    			context.beginPath();
+	    			context.moveTo(tempLinesPolygons[i].x, tempLinesPolygons[i].y);
+	    			if(i == tempLinesPolygons.length-1){
+	    				context.lineTo(event.clientX, event.clientY);
+	    				context.stroke();
+	    				context.fill();
+	    				context.moveTo(tempLinesPolygons[0].x, tempLinesPolygons[0].y);
+	    				context.lineTo(event.clientX, event.clientY);
+	    				context.stroke();
+	    				context.fill();
+		    		}else{
+	    				context.lineTo(tempLinesPolygons[i+1].x, tempLinesPolygons[i+1].y);
+	    			}
+	    			context.stroke();
+	    			context.fill();
+	    			context.closePath();
 	    		}	
-	    	
+	    		context.closePath();
 		    }
 		
 			window.addEventListener("load",eventWindowLoaded,false);
@@ -167,9 +259,13 @@
 
 		</head>
   	<body>
-		<canvas id ="canvas" width="500" height="300" style="border:1px solid #000000;" oncontextmenu="return false;" > 
-		</canvas> 		
+		<canvas id ="canvas" width="800" height="600" style="border:1px solid #000000;" oncontextmenu="return false;" > 
+		</canvas>
+		<button onclick="drawPointMode()">Draw Points</button> 		
 		<button onclick="drawLineMode()">Draw Lines</button>
 		<button onclick="drawPoligonalMode()">Draw Poligonals</button>
+		<button onclick="drawPolygonMode()">Draw Polygons</button>
+		<button onclick="pickMode()">Pick</button>
+
   	</body>
 </html>
