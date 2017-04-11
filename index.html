@@ -11,7 +11,7 @@
 	     	 	context = c.getContext("2d"); 
 	      		document.getElementById("canvas").addEventListener('click', mousedown)
 	      		document.getElementById("canvas").addEventListener('mousemove', biteTheDust)
-	      		//document.getElementById("canvas").addEventListener('oncontextmenu', rightClick )
+	      		document.getElementById("canvas").addEventListener('contextmenu', rightClick )
 	      		
 		    	mode = "drawLine";
 		    	numPontosLinha=0;
@@ -86,25 +86,17 @@
 		    			biteTheDust();
 		    		}
 		    	}
-		    /*function rightClick(){
+		    function rightClick(){
 		    	var poligonalTemp=[];
-		    	for(var i = 0; i<tempLinesPoligonals.length; i++){
+		    	for(var i = 0; i<tempLinesPoligonals.length-1; i++){
 		    		poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y)));
 
 		    	}
-		    	poligonals.push(poligonalTemp);
-		    	console.log(poligonals);
-		    }*/
-
-		    c.oncontextmenu = function(){
-		    	var poligonalTemp=[];
-		    	for(var i = 0; i<tempLinesPoligonals.length; i++){
-		    		poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y)));
-
-		    	}
+		    	tempLinesPoligonals = [];
 		    	poligonals.push(poligonalTemp);
 		    	console.log(poligonals);
 		    }
+
 
 		    function biteTheDust(){
 		    	context.clearRect(0, 0, canvas.width, canvas.height);
@@ -114,6 +106,16 @@
 	    			context.beginPath();
 	    			context.moveTo(lines[i].start.x, lines[i].start.y);
 	    			context.lineTo(lines[i].end.x,lines[i].end.y);
+	    			context.stroke();
+	    			context.fill();
+					context.closePath();
+	    		}
+
+	    		for (var i = 0; i<poligonals.length; i++){
+	    			context.beginPath();
+	    			for()
+	    			context.moveTo(poligonals[i].start.x, lines[i].start.y);
+	    			context.lineTo(poligonals[i].end.x,lines[i].end.y);
 	    			context.stroke();
 	    			context.fill();
 					context.closePath();
