@@ -5,17 +5,20 @@
 		<title>Um titulo inteligente</title>
 		<script type="text/javascript" >
 		/*Quando o a pagina carregar esta função inicializa as variaveis globais*/
-			lines = [];
+			
 			function eventWindowLoaded () {	
  	      		c = document.getElementById("canvas");
 	     	 	context = c.getContext("2d"); 
 	      		document.getElementById("canvas").addEventListener('click', mousedown)
 	      		document.getElementById("canvas").addEventListener('mousemove', biteTheDust)
+	      		//document.getElementById("canvas").addEventListener('oncontextmenu', rightClick )
 	      		
-	      		lines = [];
 		    	mode = "drawLine";
 		    	numPontosLinha=0;
 		    	tempPoints = [];
+		    	tempLinesPoligonals = [];
+		    	poligonals = [];
+		    	lines = [];
 		   	}	
 
 			function Ponto(x,y){
@@ -31,11 +34,25 @@
 				return this;
 			}
 
+			function Poligonal(lines){
+				this.lines = lines;
+				return this;
+			}
 			incomplete = false;	
 			
 
 		    function pickmode(){
 		    	mode="pickMode";
+		    	biteTheDust();
+		    }
+		    function drawLineMode(){
+		    	mode="drawLine";
+		    	biteTheDust();
+		    }
+
+		     function drawPoligonalMode(){
+		    	mode="drawPoligonal";
+		    	console.log("drawing poligonals");
 		    	biteTheDust();
 		    }
 
@@ -46,7 +63,6 @@
 						numPontosLinha++;
 						biteTheDust();
 					}else{
-						console.log("here i am");
 						var tmpLinha = new Linha(new Ponto(tempPoints[0].x,tempPoints[0].y), new Ponto(x,y));
 						lines.push(tmpLinha);						
 						numPontosLinha ++;
@@ -56,8 +72,6 @@
 				}
 		    }
 
-
-
 			function mousedown(){
 	    		var mousex = event.clientX;
 	    		var mousey = event.clientY;
@@ -65,15 +79,31 @@
 			    	addClick(mousex,mousey);
 		    		biteTheDust();
 		    	}
-		    	else if(mode == "pickMode"){
-		    		for(i=0;i<linesX.length;i+=2){
-		    			console.log("interação "+ i);
-		    			if(pick_by_dist(linesX[i],linesY[i],linesX[i+1],linesY[i+1],mousex,mousey,5)==1){
-		    				console.log("pick");
-		    				return 1;
-		    			}
+
+		    	else if(mode == "drawPoligonal"){
+		    			tempLinesPoligonals.push(new Ponto(mousex,mousey));
+		    			incomplete = true;
+		    			biteTheDust();
 		    		}
 		    	}
+		    /*function rightClick(){
+		    	var poligonalTemp=[];
+		    	for(var i = 0; i<tempLinesPoligonals.length; i++){
+		    		poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y)));
+
+		    	}
+		    	poligonals.push(poligonalTemp);
+		    	console.log(poligonals);
+		    }*/
+
+		    c.oncontextmenu = function(){
+		    	var poligonalTemp=[];
+		    	for(var i = 0; i<tempLinesPoligonals.length; i++){
+		    		poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y)));
+
+		    	}
+		    	poligonals.push(poligonalTemp);
+		    	console.log(poligonals);
 		    }
 
 		    function biteTheDust(){
@@ -112,6 +142,22 @@
 	    			context.fill();
 					context.closePath();
 	    		}
+
+	    		for(var i = 0; i<tempLinesPoligonals.length; i++){
+	    			console.log("oi");
+	    			context.beginPath();
+	    			context.moveTo(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y);
+	    			if(i == tempLinesPoligonals.length-1){
+	    				console.log("mouse");
+	    				context.lineTo(event.clientX, event.clientY);
+	    			}else{
+	    				console.log("array");
+	    				context.lineTo(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y);
+	    			}
+	    			context.stroke();
+	    			context.fill();
+	    			context.closePath();
+	    		}	
 	    	
 		    }
 		
@@ -121,7 +167,8 @@
 		</head>
   	<body>
 		<canvas id ="canvas" width="500" height="300" style="border:1px solid #000000;" > 
-		  
 		</canvas> 		
+		<button onclick="drawLineMode()">Draw Lines</button>
+		<button onclick="drawPoligonalMode()">Draw Poligonals</button>
   	</body>
 </html>
