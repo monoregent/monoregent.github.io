@@ -90,11 +90,12 @@
 		    	var poligonalTemp=[];
 		    	for(var i = 0; i<tempLinesPoligonals.length-1; i++){
 		    		poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y)));
-
 		    	}
+		    	poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(event.clientX, event.clientY)));
 		    	tempLinesPoligonals = [];
 		    	poligonals.push(poligonalTemp);
 		    	console.log(poligonals);
+		    	return false;
 		    }
 
 
@@ -114,8 +115,8 @@
 	    		for (var i = 0; i<poligonals.length; i++){
 	    			context.beginPath();
 	    			for(var j = 0; j< poligonals[i].length; j++){
-	    				context.moveTo(poligonals[i].lines[j].Linha.start.x, lines[i].Array[j].Linha.start.y);
-	    				context.lineTo(poligonals[i].lines[j].Linha.start.x,lines[i].Array[j].Linha.end.y);
+	    				context.moveTo(poligonals[i][j].start.x, poligonals[i][j].start.y);
+	    				context.lineTo(poligonals[i][j].end.x,poligonals[i][j].end.y);
 	    			}
 	    			context.stroke();
 	    			context.fill();
