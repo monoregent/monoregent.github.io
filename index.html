@@ -53,7 +53,15 @@
 			}
 			incomplete = false;	
 			
-
+			function idleMode(){
+				if(mode=="translateModePoint" || mode=="translateModeLine" || mode=="translateModePoligonal" || mode=="translateModePolygon"){
+					mode = "idleMode";
+					pickPointId = -1;
+			    	pickLineId = -1;
+			    	pickPoligonalId = -1;
+			    	pickPolygonId = -1;
+				}
+			}
 		    function pickMode(){
 		    	mode="pickMode";
 		    	biteTheDust();
@@ -75,6 +83,10 @@
 
 		    function drawPolygonMode(){
 		    	mode="drawPolygon";
+		    	biteTheDust();
+		    }
+		    function translateMode(){
+		    	mode="translateMode";
 		    	biteTheDust();
 		    }
 
@@ -113,7 +125,13 @@
 		    		biteTheDust();
 		    	}else if(mode == "pickMode"){
 		    		pick();
-		    	}
+		    	}else if(mode=="translateModePoint" || mode=="translateModeLine" || mode=="translateModePoligonal" || mode=="translateModePolygon"){
+					mode = "idleMode";
+					pickPointId = -1;
+			    	pickLineId = -1;
+			    	pickPoligonalId = -1;
+			    	pickPolygonId = -1;
+				}
 		    }
 
 		    function pickPonto(tol){
@@ -135,7 +153,7 @@
 				cod[3] = y > ymax;
 			}
 			//pick de linha usando cohen sutherland clipping
-		    function pickLinha(tol){
+		    function pickLinha(tol,lines1){
 		    	var px = event.clientX-9;
 		    	var py = event.clientY-9;
 
@@ -146,19 +164,16 @@
 		    	var cod0 = [];
 		    	var cod1 = [];
 
-		    	for(var i = 0; i<lines.length; i++){
-		    		var x0 = lines[i].start.x;
-		    		var x1 = lines[i].end.x;
-					var y0 = lines[i].start.y;
-					var y1 = lines[i].end.y;
+		    	for(var i = 0; i<lines1.length; i++){
+		    		var x0 = lines1[i].start.x;
+		    		var x1 = lines1[i].end.x;
+					var y0 = lines1[i].start.y;
+					var y1 = lines1[i].end.y;
 
 
 		    		pickCode(x1, y1, xmin, xmax, ymin, ymax, cod1);
-		    		//console.log(cod1);
 		    		do{
-		    			console.log("loop");
 		    			pickCode(x0, y0, xmin, xmax, ymin, ymax, cod0);
-		    			//console.log(cod0);
 		    			for(var j = 0; j < 4; j++){
 		    				if(cod0[j] && cod1[j]){
 		    					break;
@@ -179,8 +194,7 @@
 					    else if (cod0[3])
 							x0 += (ymax - y0) * (x1 - x0) / (y1 - y0), y0 = ymax;
 					    else{
-					    	pickLineId = i;
-							return 1;
+							return i;
 					    }
 						
 					} while (1);
@@ -188,6 +202,16 @@
 		    	}
 		    	return -1;
 		    }
+
+		    function pickPoligonal(tol){
+		    	for(var i =0;i<poligonals.length;i++){
+		    		if(pickLinha(tol,poligonals[i])!= -1){
+		    			pickPoligonalId=i;
+		    			return 1;
+		    		}
+		    	}
+		    }
+
 		   function findAngle(p0,p1,p2) {
 			    var b = Math.pow(p1.x-p0.x,2) + Math.pow(p1.y-p0.y,2),
 			        a = Math.pow(p1.x-p2.x,2) + Math.pow(p1.y-p2.y,2),
@@ -217,20 +241,65 @@
 		    	var px = event.clientX-9;
 		    	var py = event.clientY-9;
 		    	console.log("tentativa de pick");
-		    	/*if(pickPonto(4)){
+		    	if(pickPonto(5)){
+		    		if(mode="translateMode"){
+		    			mode="translateModePoint";
+		    		}
 					return true;  
 		    	}
-		    	if(pickLinha(1)){
-		    		//console.log(pickLineId);
+		    	if(pickLinha(5,lines)!= -1){
+		    		pickLineId=pickLinha(1,lines);
+		    		if(mode="translateMode"){
+		    			mode="translateModeLine";
+		    		}
+		    		console.log(pickLineId);
+
 		    		return true
-		    	}*/
-		    	if(pickPolygon()){
-		    		console.log(pickPolygonId);
+		    	}
+		    	if(pickPoligonal(3,poligonals) != -1){
+		    		if(mode="translateMode"){
+		    			mode="translateModePoligonal";
+		    		}
+		    		console.log(pickPoligonalId)
 		    		return true;
 		    	}
+		    	if(pickPolygon()){
+		    		if(mode="translateMode"){
+		    			mode="translateModePolygon";
+		    		}
+		    		console.log(pickPolygonId);
+		    		return true;
+		    	}	
+		    }
 
-		    	
-		    	
+		    function multMatriz(mat1, mat2){
+		    	var i, j, k, s;
+		    	var matRes = [];
+		    	for(i = 0; i < mat1.length; i++){
+		    		var res = [];
+		    		for(j = 0; j < mat2[0].length; j++){
+		    			s = 0;
+		    			for(k = 0; k < mat2.length; k++){
+			    			s += mat1[i][k] * mat2[k][j];
+		    			}
+			    		res.push(s);
+		    		}
+		    		matRes.push(res);
+		    	}
+		    	return matRes;
+		    }
+
+		    function translate(p1, p2){
+		    	var p0 = [];
+		    	var mat = [[1, 0, p2.x],
+		    				[0, 1, p2.y],
+		    				[0, 0, 1]];
+		    	p0.push([p1.x]);
+		    	p0.push([p1.y]);
+		    	p0.push([1]);
+		    	p0 = multMatriz(mat, p0);
+		    	var posTranslate = new Ponto(p0[0],p0[1]);
+		    	return posTranslate;
 		    }
 
 		    function rightClick(){
@@ -260,6 +329,21 @@
 		    	context.clearRect(0, 0, canvas.width, canvas.height);
 		    	c.strokeStyle = "#df4b26";
 		    	c.lineWidth = 3;
+		    	var px = event.clientX-9;
+		    	var py = event.clientY-9;
+		    	if(mode=="translateModePoint"){
+		    		points[pickPointId] = translate(points[pickPointId],new Ponto(px-points[pickPointId].x,py-points[pickPointId].y));
+		    	}
+		    	if(mode == "translateModeLine"){
+		    		if(pickLineId != -1){
+		    			console.log("coisa");
+			    		console.log(lines[pickLineId]);
+
+			    		lines[pickLineId].start = translate(new Ponto(lines[pickLineId].start.x, lines[pickLineId].start.y), new Ponto(px-lines[pickLineId].start.x, py-lines[pickLineId].start.y));
+			    		lines[pickLineId].end = translate(new Ponto(lines[pickLineId].end.x , lines[pickLineId].end.y), new Ponto(px-lines[pickLineId].end.x, py-lines[pickLineId].end.y));
+			    		console.log(lines[pickLineId]);
+		    		}
+		    	}
 
 		    	//Desenha pontos
 		    	for(var i=0; i<points.length;i++){
@@ -372,6 +456,8 @@
 		<button onclick="drawPoligonalMode()">Draw Poligonals</button>
 		<button onclick="drawPolygonMode()">Draw Polygons</button>
 		<button onclick="pickMode()">Pick</button>
+		<button onclick="translateMode()">Translate</button>
+
 
   	</body>
 </html>
