@@ -27,6 +27,8 @@
 		    	pickLineId = -1;
 		    	pickPoligonalId = -1;
 		    	pickPolygonId = -1;
+
+		    	mouseprevstate = {x:0, y:0};
 		   	}	
 
 			function Ponto(x,y){
@@ -53,15 +55,6 @@
 			}
 			incomplete = false;	
 			
-			function idleMode(){
-				if(mode=="translateModePoint" || mode=="translateModeLine" || mode=="translateModePoligonal" || mode=="translateModePolygon"){
-					mode = "idleMode";
-					pickPointId = -1;
-			    	pickLineId = -1;
-			    	pickPoligonalId = -1;
-			    	pickPolygonId = -1;
-				}
-			}
 		    function pickMode(){
 		    	mode="pickMode";
 		    	biteTheDust();
@@ -123,7 +116,7 @@
 		    		tempLinesPolygons.push(new Ponto(mousex,mousey));
 		    		incomplete = true;
 		    		biteTheDust();
-		    	}else if(mode == "pickMode"){
+		    	}else if(mode == "translateMode"){
 		    		pick();
 		    	}else if(mode=="translateModePoint" || mode=="translateModeLine" || mode=="translateModePoligonal" || mode=="translateModePolygon"){
 					mode = "idleMode";
@@ -144,6 +137,8 @@
 		    			return true;
 		    		}
 		    	}
+
+		    	return false;
 		    }
 
 		    function pickCode(x,y,xmin,xmax,ymin,ymax, cod){
@@ -210,25 +205,26 @@
 		    			return 1;
 		    		}
 		    	}
+		    	return -1;
 		    }
 
 		   function findAngle(p0,p1,p2) {
 			    var b = Math.pow(p1.x-p0.x,2) + Math.pow(p1.y-p0.y,2),
 			        a = Math.pow(p1.x-p2.x,2) + Math.pow(p1.y-p2.y,2),
 			        c = Math.pow(p2.x-p0.x,2) + Math.pow(p2.y-p0.y,2);
-			    return Math.acos( (a+b-c) / Math.sqrt(4*a*b) )*100 /Math.PI ;
+			    return Math.acos( (a+b-c) / Math.sqrt(4*a*b) )*180 /Math.PI ;
 			}
 
 		    function pickPolygon(){
-		    	
 		    	var px = event.clientX-9;
 		    	var py = event.clientY-9;
 
-		    	for(var i =0; i<polygons.length;i++){
+		    	for(var i =0; i<polygons.length;i++){	
 		    		var wn=0;
 		    		for(var j = 0; j<polygons[i].length; j++){
 			    		wn+=findAngle(polygons[i][j].start,new Ponto(px,py),polygons[i][j].end);
 			    	}
+			    	console.log(wn);
 			    	if(wn>180){
 			    		pickPolygonId = i;
 			    		return 1;
@@ -240,31 +236,36 @@
 		    function pick(){
 		    	var px = event.clientX-9;
 		    	var py = event.clientY-9;
+
 		    	console.log("tentativa de pick");
+
 		    	if(pickPonto(5)){
-		    		if(mode="translateMode"){
+		    		if(mode=="translateMode"){
 		    			mode="translateModePoint";
 		    		}
 					return true;  
 		    	}
+
 		    	if(pickLinha(5,lines)!= -1){
 		    		pickLineId=pickLinha(1,lines);
-		    		if(mode="translateMode"){
+		    		if(mode=="translateMode"){
 		    			mode="translateModeLine";
 		    		}
 		    		console.log(pickLineId);
 
 		    		return true
 		    	}
-		    	if(pickPoligonal(3,poligonals) != -1){
-		    		if(mode="translateMode"){
+		    	if(pickPoligonal(3) != -1){
+		    		console.log(pickPoligonalId);
+		    		if(mode=="translateMode"){
 		    			mode="translateModePoligonal";
 		    		}
-		    		console.log(pickPoligonalId)
+		    		
 		    		return true;
 		    	}
-		    	if(pickPolygon()){
-		    		if(mode="translateMode"){
+		    	console.log("oi");
+		    	if(pickPolygon()!= -1){
+		    		if(mode=="translateMode"){
 		    			mode="translateModePolygon";
 		    		}
 		    		console.log(pickPolygonId);
@@ -298,7 +299,7 @@
 		    	p0.push([p1.y]);
 		    	p0.push([1]);
 		    	p0 = multMatriz(mat, p0);
-		    	var posTranslate = new Ponto(p0[0],p0[1]);
+		    	var posTranslate = new Ponto(p0[0][0],p0[1][0]);
 		    	return posTranslate;
 		    }
 
@@ -331,20 +332,36 @@
 		    	c.lineWidth = 3;
 		    	var px = event.clientX-9;
 		    	var py = event.clientY-9;
-		    	if(mode=="translateModePoint"){
+
+		    	if(mode == "translateModePoint"){
 		    		points[pickPointId] = translate(points[pickPointId],new Ponto(px-points[pickPointId].x,py-points[pickPointId].y));
 		    	}
+
 		    	if(mode == "translateModeLine"){
 		    		if(pickLineId != -1){
-		    			console.log("coisa");
-			    		console.log(lines[pickLineId]);
-
-			    		lines[pickLineId].start = translate(new Ponto(lines[pickLineId].start.x, lines[pickLineId].start.y), new Ponto(px-lines[pickLineId].start.x, py-lines[pickLineId].start.y));
-			    		lines[pickLineId].end = translate(new Ponto(lines[pickLineId].end.x , lines[pickLineId].end.y), new Ponto(px-lines[pickLineId].end.x, py-lines[pickLineId].end.y));
+			    		lines[pickLineId].start = translate(new Ponto(lines[pickLineId].start.x, lines[pickLineId].start.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+			    		lines[pickLineId].end = translate(new Ponto(lines[pickLineId].end.x , lines[pickLineId].end.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
 			    		console.log(lines[pickLineId]);
 		    		}
 		    	}
 
+		    	if(mode == "translateModePoligonal"){
+		    		if(pickPoligonalId != -1){
+		    			for(var i=0;i<poligonals[pickPoligonalId].length;i++){
+				    		poligonals[pickPoligonalId][i].start = translate(new Ponto(poligonals[pickPoligonalId][i].start.x, poligonals[pickPoligonalId][i].start.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+				    		poligonals[pickPoligonalId][i].end = translate(new Ponto(poligonals[pickPoligonalId][i].end.x , poligonals[pickPoligonalId][i].end.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+				    	}
+		    		}
+		    	}
+
+		    	if(mode == "translateModePolygon"){
+		    		if(pickPolygonId != -1){
+		    			for(var i=0;i<polygons[pickPolygonId].length;i++){
+				    		polygons[pickPolygonId][i].start = translate(new Ponto(polygons[pickPolygonId][i].start.x, polygons[pickPolygonId][i].start.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+				    		polygons[pickPolygonId][i].end = translate(new Ponto(polygons[pickPolygonId][i].end.x , polygons[pickPolygonId][i].end.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+				    	}
+		    		}
+		    	}
 		    	//Desenha pontos
 		    	for(var i=0; i<points.length;i++){
 		    		context.strokeRect(points[i].x, points[i].y, 1, 1);
@@ -442,6 +459,7 @@
 	    			context.closePath();
 	    		}	
 	    		context.closePath();
+	    		mouseprevstate ={x:px, y:py};
 		    }
 		
 			window.addEventListener("load",eventWindowLoaded,false);
@@ -455,8 +473,7 @@
 		<button onclick="drawLineMode()">Draw Lines</button>
 		<button onclick="drawPoligonalMode()">Draw Poligonals</button>
 		<button onclick="drawPolygonMode()">Draw Polygons</button>
-		<button onclick="pickMode()">Pick</button>
-		<button onclick="translateMode()">Translate</button>
+		<button onclick="translateMode()">Pick</button>
 
 
   	</body>
