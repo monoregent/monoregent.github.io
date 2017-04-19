@@ -95,8 +95,8 @@
 		    }
 
 			function mousedown(){
-	    		var mousex = event.clientX;
-	    		var mousey = event.clientY;
+	    		var mousex = event.clientX-9;
+	    		var mousey = event.clientY-9;
 	    		if(mode=="drawLine"){
 			    	addClick(mousex,mousey);
 		    		biteTheDust();
@@ -116,16 +116,121 @@
 		    	}
 		    }
 
-		    function pickPonto(){
-
+		    function pickPonto(tol){
+		    	var px = event.clientX-9;
+		    	var py = event.clientY-9;
+		    	for(var i = 0;i<points.length;i++){	
+		    		if(points[i].x>points[i].x-tol && points[i].x<px+tol && points[i].y>py-tol && points[i].y<py+tol){
+		    			pickPointId = i;
+		    			console.log("pick ponto " + i);
+		    			return true;
+		    		}
+		    	}
 		    }
-		    
-		    function pick(){
-		    	var px = event.clientX;
-		    	var py = event.clientY;
-		    	for(var i;i<points,length;i++){
+
+		    function pickCode(x,y,xmin,xmax,ymin,ymax, cod){
+				cod[0] = x < xmin;
+			 	cod[1] = x > xmax;
+				cod[2] = y < ymin;
+				cod[3] = y > ymax;
+			}
+			//pick de linha usando cohen sutherland clipping
+		    function pickLinha(tol){
+		    	var px = event.clientX-9;
+		    	var py = event.clientY-9;
+
+		    	var xmin = px-tol;
+		    	var xmax = px+tol;
+		    	var ymin = py-tol;
+		    	var ymax = py+tol;
+		    	var cod0 = [];
+		    	var cod1 = [];
+
+		    	for(var i = 0; i<lines.length; i++){
+		    		var x0 = lines[i].start.x;
+		    		var x1 = lines[i].end.x;
+					var y0 = lines[i].start.y;
+					var y1 = lines[i].end.y;
+
+
+		    		pickCode(x1, y1, xmin, xmax, ymin, ymax, cod1);
+		    		//console.log(cod1);
+		    		do{
+		    			console.log("loop");
+		    			pickCode(x0, y0, xmin, xmax, ymin, ymax, cod0);
+		    			//console.log(cod0);
+		    			for(var j = 0; j < 4; j++){
+		    				if(cod0[j] && cod1[j]){
+		    					break;
+		    				}
+		    			}
+		    			if(j != 4){
+		    				break;
+		    			}
+		    			if (cod0[0])
+							y0 += (xmin - x0) * (y1 - y0) / (x1 - x0), x0 = xmin;
+		    			
+						else if (cod0[1])
+							y0 += (xmax - x0) * (y1 - y0) / (x1 - x0), x0 = xmax;
+						
+						else if (cod0[2])
+							x0 += (ymin - y0) * (x1 - x0) / (y1 - y0), y0 = ymin;
+						
+					    else if (cod0[3])
+							x0 += (ymax - y0) * (x1 - x0) / (y1 - y0), y0 = ymax;
+					    else{
+					    	pickLineId = i;
+							return 1;
+					    }
+						
+					} while (1);
 
 		    	}
+		    	return -1;
+		    }
+		   function findAngle(p0,p1,p2) {
+			    var b = Math.pow(p1.x-p0.x,2) + Math.pow(p1.y-p0.y,2),
+			        a = Math.pow(p1.x-p2.x,2) + Math.pow(p1.y-p2.y,2),
+			        c = Math.pow(p2.x-p0.x,2) + Math.pow(p2.y-p0.y,2);
+			    return Math.acos( (a+b-c) / Math.sqrt(4*a*b) )*100 /Math.PI ;
+			}
+
+		    function pickPolygon(){
+		    	
+		    	var px = event.clientX-9;
+		    	var py = event.clientY-9;
+
+		    	for(var i =0; i<polygons.length;i++){
+		    		var wn=0;
+		    		for(var j = 0; j<polygons[i].length; j++){
+			    		wn+=findAngle(polygons[i][j].start,new Ponto(px,py),polygons[i][j].end);
+			    	}
+			    	if(wn>180){
+			    		pickPolygonId = i;
+			    		return 1;
+			    	}
+		    	}
+		    	return -1;
+		    }	
+
+		    function pick(){
+		    	var px = event.clientX-9;
+		    	var py = event.clientY-9;
+		    	console.log("tentativa de pick");
+		    	/*if(pickPonto(4)){
+					return true;  
+		    	}
+		    	if(pickLinha(1)){
+		    		//console.log(pickLineId);
+		    		return true
+		    	}*/
+		    	if(pickPolygon()){
+		    		console.log(pickPolygonId);
+		    		return true;
+		    	}
+
+		    	
+		    	
 		    }
 
 		    function rightClick(){
@@ -134,16 +239,17 @@
 			    	for(var i = 0; i<tempLinesPoligonals.length-1; i++){
 			    		poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y)));
 			    	}
-			    	poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(event.clientX, event.clientY)));
+			    	poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(event.clientX-9, event.clientY-9)));
 			    	tempLinesPoligonals = [];
 			    	poligonals.push(poligonalTemp);
+
 			    }else if(mode == "drawPolygon"){
 			    	var polygonTemp = [];
 			    	for(var i = 0; i<tempLinesPolygons.length-1; i++){
 			    		polygonTemp.push(new Linha(new Ponto(tempLinesPolygons[i].x, tempLinesPolygons[i].y), new Ponto(tempLinesPolygons[i+1].x, tempLinesPolygons[i+1].y)));
 			    	}
-			    	polygonTemp.push(new Linha(new Ponto(tempLinesPolygons[i].x, tempLinesPolygons[i].y), new Ponto(event.clientX, event.clientY)));
-			    	polygonTemp.push(new Linha(new Ponto(event.clientX, event.clientY), new Ponto(tempLinesPolygons[0].x, tempLinesPolygons[0].y)));
+			    	polygonTemp.push(new Linha(new Ponto(tempLinesPolygons[i].x, tempLinesPolygons[i].y), new Ponto(event.clientX-9, event.clientY-9)));
+			    	polygonTemp.push(new Linha(new Ponto(event.clientX-9, event.clientY-9), new Ponto(tempLinesPolygons[0].x, tempLinesPolygons[0].y)));
 			    	tempLinesPolygons = [];
 			    	polygons.push(polygonTemp);
 			    }
@@ -155,7 +261,7 @@
 		    	c.strokeStyle = "#df4b26";
 		    	c.lineWidth = 3;
 
-		    	//
+		    	//Desenha pontos
 		    	for(var i=0; i<points.length;i++){
 		    		context.strokeRect(points[i].x, points[i].y, 1, 1);
 		    	}
@@ -205,7 +311,7 @@
 	    						tempPoints = [];
 
 	    					}else{
-	    						context.lineTo(event.clientX,event.clientY);
+	    						context.lineTo(event.clientX-9,event.clientY-9);
 	    					}
 	    				}
 	    			}else{
@@ -223,7 +329,7 @@
 	    			context.beginPath();
 	    			context.moveTo(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y);
 	    			if(i == tempLinesPoligonals.length-1){
-	    				context.lineTo(event.clientX, event.clientY);
+	    				context.lineTo(event.clientX-9, event.clientY-9);
 	    			}else{
 	    				context.lineTo(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y);
 	    			}
@@ -237,11 +343,11 @@
 	    			context.beginPath();
 	    			context.moveTo(tempLinesPolygons[i].x, tempLinesPolygons[i].y);
 	    			if(i == tempLinesPolygons.length-1){
-	    				context.lineTo(event.clientX, event.clientY);
+	    				context.lineTo(event.clientX-9, event.clientY-9);
 	    				context.stroke();
 	    				context.fill();
 	    				context.moveTo(tempLinesPolygons[0].x, tempLinesPolygons[0].y);
-	    				context.lineTo(event.clientX, event.clientY);
+	    				context.lineTo(event.clientX-9, event.clientY-9);
 	    				context.stroke();
 	    				context.fill();
 		    		}else{
