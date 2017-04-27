@@ -12,7 +12,7 @@
 	      		document.getElementById("canvas").addEventListener('click', mousedown)
 	      		document.getElementById("canvas").addEventListener('mousemove', biteTheDust)
 	      		document.getElementById("canvas").addEventListener('contextmenu', rightClick )
-	      		
+	      		rect = canvas.getBoundingClientRect();
 		    	mode = "drawLine";
 		    	numPontosLinha=0;
 		    	tempPoints = [];
@@ -22,6 +22,8 @@
 		    	points = [];
 		    	lines = [];
 		    	polygons = [];
+
+		    	pontoglobalgambiarrento = new Ponto(0,0);
 
 		    	pickPointId = -1;
 		    	pickLineId = -1;
@@ -59,6 +61,10 @@
 		    	mode="pickMode";
 		    	biteTheDust();
 		    }
+		    function rotateMode(){
+		    	mode="rotateMode";
+		    	biteTheDust();
+		    }
 		    function drawLineMode(){
 		    	mode="drawLine";
 		    	biteTheDust();
@@ -82,8 +88,12 @@
 		    	mode="translateMode";
 		    	biteTheDust();
 		    }
-
+		    function scaleMode(){
+		    	mode="pickPointScale";
+		    	scalepick();
+		    }
 			function addClick(x,y){
+
 				if (mode == "drawLine"){
 					if(numPontosLinha % 2 == 0){
 						tempPoints.push(new Ponto(x,y))
@@ -100,8 +110,9 @@
 		    }
 
 			function mousedown(){
-	    		var mousex = event.clientX-9;
-	    		var mousey = event.clientY-9;
+				var rect = canvas.getBoundingClientRect();
+	    		var mousex = event.clientX-rect.left;
+	    		var mousey = event.clientY-rect.top;
 	    		if(mode=="drawLine"){
 			    	addClick(mousex,mousey);
 		    		biteTheDust();
@@ -119,17 +130,25 @@
 		    	}else if(mode == "translateMode"){
 		    		pick();
 		    	}else if(mode=="translateModePoint" || mode=="translateModeLine" || mode=="translateModePoligonal" || mode=="translateModePolygon"){
-					mode = "idleMode";
+					mode = "translateMode";
 					pickPointId = -1;
 			    	pickLineId = -1;
 			    	pickPoligonalId = -1;
 			    	pickPolygonId = -1;
+				}else if(mode=="rotateMode"){
+					mode="pickCenterRotation";
+				}else if(mode=="pickCenterRotation"){
+					pontoglobalgambiarrento = new Ponto(mousex,mousey);
+					rotate();
+				}else if(mode =="pickPointScale"){
+					pontoglobalgambiarrento = new Ponto(mousex, mousey);
+					scalepick();
 				}
 		    }
 
 		    function pickPonto(tol){
-		    	var px = event.clientX-9;
-		    	var py = event.clientY-9;
+		    	var px = event.clientX-rect.Left;
+		    	var py = event.clientY-rect.Top;
 		    	for(var i = 0;i<points.length;i++){	
 		    		if(points[i].x>points[i].x-tol && points[i].x<px+tol && points[i].y>py-tol && points[i].y<py+tol){
 		    			pickPointId = i;
@@ -149,8 +168,9 @@
 			}
 			//pick de linha usando cohen sutherland clipping
 		    function pickLinha(tol,lines1){
-		    	var px = event.clientX-9;
-		    	var py = event.clientY-9;
+		    	var rect = canvas.getBoundingClientRect();
+		    	var px = event.clientX-rect.left;
+		    	var py = event.clientY-rect.top;
 
 		    	var xmin = px-tol;
 		    	var xmax = px+tol;
@@ -216,8 +236,9 @@
 			}
 
 		    function pickPolygon(){
-		    	var px = event.clientX-9;
-		    	var py = event.clientY-9;
+		    	var rect = canvas.getBoundingClientRect();
+		    	var px = event.clientX-rect.left;
+		    	var py = event.clientY-rect.top;
 
 		    	for(var i =0; i<polygons.length;i++){	
 		    		var wn=0;
@@ -234,8 +255,9 @@
 		    }	
 
 		    function pick(){
-		    	var px = event.clientX-9;
-		    	var py = event.clientY-9;
+		    	var rect = canvas.getBoundingClientRect();
+		    	var px = event.clientX-rect.left;
+		    	var py = event.clientY-rect.top;
 
 		    	console.log("tentativa de pick");
 
@@ -273,6 +295,88 @@
 		    	}	
 		    }
 
+		    function scalepick(){
+		    	var rect = canvas.getBoundingClientRect();
+		    	var px = event.clientX-rect.left;
+		    	var py = event.clientY-rect.top;
+
+		    	console.log("tentativa de pick");
+
+		    	if(pickPonto(5)){
+		    		if(mode=="pickPointScale"){
+		    			mode="scaleModePoint";
+		    		}
+					return true;  
+		    	}
+
+		    	if(pickLinha(5,lines)!= -1){
+		    		pickLineId=pickLinha(1,lines);
+		    		if(mode=="pickPointScale"){
+		    			mode="scaleModeLine";
+		    		}
+		    		console.log(pickLineId);
+
+		    		return true
+		    	}
+		    	if(pickPoligonal(3) != -1){
+		    		console.log(pickPoligonalId);
+		    		if(mode=="pickPointScale"){
+		    			mode="scaleModePoligonal";
+		    		}
+		    		
+		    		return true;
+		    	}
+		    	console.log("oi");
+		    	if(pickPolygon()!= -1){
+		    		if(mode=="pickPointScale"){
+		    			mode="scaleModePolygon";
+		    		}
+		    		console.log(pickPolygonId);
+		    		return true;
+		    	}	
+		    }
+
+		    function rotate(){
+		    	var rect = canvas.getBoundingClientRect();
+		    	var px = event.clientX-rect.left;
+		    	var py = event.clientY-rect.top;
+
+		    	console.log("tentativa de pick");
+
+		    	if(pickPonto(5)){
+		    		if(mode=="pickCenterRotation"){
+		    			mode="rotateModePoint";
+		    		}
+					return true;  
+		    	}
+
+		    	if(pickLinha(5,lines)!= -1){
+		    		pickLineId=pickLinha(1,lines);
+		    		if(mode=="pickCenterRotation"){
+		    			mode="rotateModeLine";
+		    		}
+		    		console.log(pickLineId);
+
+		    		return true
+		    	}
+		    	if(pickPoligonal(3) != -1){
+		    		console.log(pickPoligonalId);
+		    		if(mode=="pickCenterRotation"){
+		    			mode="rotateModePoligonal";
+		    		}
+		    		
+		    		return true;
+		    	}
+		    	console.log("oi");
+		    	if(pickPolygon()!= -1){
+		    		if(mode=="pickCenterRotation"){
+		    			mode="rotateModePolygon";
+		    		}
+		    		console.log(pickPolygonId);
+		    		return true;
+		    	}	
+		    }
+
 		    function multMatriz(mat1, mat2){
 		    	var i, j, k, s;
 		    	var matRes = [];
@@ -290,11 +394,10 @@
 		    	return matRes;
 		    }
 
+
 		    function translate(p1, p2){
 		    	var p0 = [];
-		    	var mat = [[1, 0, p2.x],
-		    				[0, 1, p2.y],
-		    				[0, 0, 1]];
+		    	var mat = [[1, 0, p2.x],[0, 1, p2.y],[0, 0, 1]];
 		    	p0.push([p1.x]);
 		    	p0.push([p1.y]);
 		    	p0.push([1]);
@@ -303,13 +406,52 @@
 		    	return posTranslate;
 		    }
 
+		    function scale(x,y,p,centro){
+		    	/*var p0 = [];
+		    	var mat = [[x,0,0], [0,y,0], [0,0,1]];
+		    	p = translate(p, new Ponto(-centro.x,-centro.y));
+		    	
+		    	p0.push([p.x]);
+		    	p0.push([p.y]);
+		    	p0.push([1]);
+		    	
+			    p0=multMatriz(mat,p0);
+			    console.log(p0);
+			    p=translate(new Ponto(p0[0][0],p0[1][0]),centro);
+			    //console.log(p);
+
+			    return p;*/
+			    //console.log(console.log(centro));
+			    //return new Ponto(p.x*x,p.y*y);
+			    return p;
+		    }
+
+		    function getAngle(p1,p2){
+		    	return Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+		    }
+
+		    function rotation(p1,p2){
+		    	var p0 = [];
+		    	var angle = getAngle(new Ponto(0,0),translate(p1,new Ponto(-p2.x,-p2.y)));		    	
+		    	var mat= [[Math.cos(angle), -Math.sin(angle), 0],
+		    	[Math.sin(angle), Math.cos(angle), 0],
+		    	[0,0,1]];
+		    	p0.push([p1.x]);
+		    	p0.push([p1.y]);
+		    	p0.push([1]);
+		    	p0 = multMatriz(mat, p0);
+		    	var posRotate  = translate(new Ponto(p0[0][0], p0[1][0]), p2);
+		    	console.log(posRotate);
+		    	return posRotate;
+		    }
+
 		    function rightClick(){
 		    	if(mode == "drawPoligonal"){
 			    	var poligonalTemp=[];
 			    	for(var i = 0; i<tempLinesPoligonals.length-1; i++){
 			    		poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y)));
 			    	}
-			    	poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(event.clientX-9, event.clientY-9)));
+			    	poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(event.clientX-rect.left, event.clientY-rect.left)));
 			    	tempLinesPoligonals = [];
 			    	poligonals.push(poligonalTemp);
 
@@ -318,8 +460,8 @@
 			    	for(var i = 0; i<tempLinesPolygons.length-1; i++){
 			    		polygonTemp.push(new Linha(new Ponto(tempLinesPolygons[i].x, tempLinesPolygons[i].y), new Ponto(tempLinesPolygons[i+1].x, tempLinesPolygons[i+1].y)));
 			    	}
-			    	polygonTemp.push(new Linha(new Ponto(tempLinesPolygons[i].x, tempLinesPolygons[i].y), new Ponto(event.clientX-9, event.clientY-9)));
-			    	polygonTemp.push(new Linha(new Ponto(event.clientX-9, event.clientY-9), new Ponto(tempLinesPolygons[0].x, tempLinesPolygons[0].y)));
+			    	polygonTemp.push(new Linha(new Ponto(tempLinesPolygons[i].x, tempLinesPolygons[i].y), new Ponto(event.clientX-rect.left, event.clientY-rect.top)));
+			    	polygonTemp.push(new Linha(new Ponto(event.clientX-rect.left, event.clientY-rect.top), new Ponto(tempLinesPolygons[0].x, tempLinesPolygons[0].y)));
 			    	tempLinesPolygons = [];
 			    	polygons.push(polygonTemp);
 			    }
@@ -328,11 +470,15 @@
 
 		    function biteTheDust(){
 		    	context.clearRect(0, 0, canvas.width, canvas.height);
+		    	
 		    	c.strokeStyle = "#df4b26";
 		    	c.lineWidth = 3;
-		    	var px = event.clientX-9;
-		    	var py = event.clientY-9;
-
+		    	var rect = canvas.getBoundingClientRect();
+		    	var px = event.clientX-rect.left;
+		    	var py = event.clientY-rect.top;
+		    	/*
+		    	TRANSLAÇÕES
+		    	*/
 		    	if(mode == "translateModePoint"){
 		    		points[pickPointId] = translate(points[pickPointId],new Ponto(px-points[pickPointId].x,py-points[pickPointId].y));
 		    	}
@@ -362,6 +508,41 @@
 				    	}
 		    		}
 		    	}
+
+		    	/*
+				ESCALAS
+				*/
+				if(mode == "scaleModePolygon"){
+					var centro=new Ponto(0,0);
+					for(var i=0;i<polygons[pickPolygonId].length;i++){
+						centro.x+=polygons[pickPolygonId][i].start.x;
+						centro.y+=polygons[pickPolygonId][i].start.y;
+					}
+					centro.x=centro.x/polygons[pickPolygonId].length;
+					centro.y=centro.y/polygons[pickPolygonId].length;
+					console.log("centro:" + centro.x);
+					for(var i=0;i<polygons[pickPolygonId].length;i++){
+						polygons[pickPolygonId][i].start=scale(pontoglobalgambiarrento.x-px, pontoglobalgambiarrento.y-py, polygons[pickPolygonId][i].start, centro);
+						polygons[pickPolygonId][i].end=scale(pontoglobalgambiarrento.x-px, pontoglobalgambiarrento.y-py, polygons[pickPolygonId][i].end, centro);
+					}
+					
+				}
+
+		    	/*
+		    	ROTAÇÕES
+		    	*/
+		    	if(mode == "rotateModeLine"){
+		    		lines[pickLineId].start = rotation(lines[pickLineId].start,new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+		    		lines[pickLineId].end = rotation(lines[pickLineId].end,new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+		    	}
+		    	if(mode == "rotateModePolygon"){
+		    		for(var i=0;i<polygons[pickPolygonId].length;i++){
+
+		    			polygons[pickPolygonId][i].start=rotation(new Ponto(polygons[pickPolygonId][i].start.x, polygons[pickPolygonId][i].start.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+		    			polygons[pickPolygonId][i].end = rotation(new Ponto(polygons[pickPolygonId][i].end.x , polygons[pickPolygonId][i].end.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+		    		}
+		    	}
+
 		    	//Desenha pontos
 		    	for(var i=0; i<points.length;i++){
 		    		context.strokeRect(points[i].x, points[i].y, 1, 1);
@@ -412,7 +593,7 @@
 	    						tempPoints = [];
 
 	    					}else{
-	    						context.lineTo(event.clientX-9,event.clientY-9);
+	    						context.lineTo(px,py);
 	    					}
 	    				}
 	    			}else{
@@ -430,7 +611,7 @@
 	    			context.beginPath();
 	    			context.moveTo(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y);
 	    			if(i == tempLinesPoligonals.length-1){
-	    				context.lineTo(event.clientX-9, event.clientY-9);
+	    				context.lineTo(px, py);
 	    			}else{
 	    				context.lineTo(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y);
 	    			}
@@ -444,11 +625,11 @@
 	    			context.beginPath();
 	    			context.moveTo(tempLinesPolygons[i].x, tempLinesPolygons[i].y);
 	    			if(i == tempLinesPolygons.length-1){
-	    				context.lineTo(event.clientX-9, event.clientY-9);
+	    				context.lineTo(px, py);
 	    				context.stroke();
 	    				context.fill();
 	    				context.moveTo(tempLinesPolygons[0].x, tempLinesPolygons[0].y);
-	    				context.lineTo(event.clientX-9, event.clientY-9);
+	    				context.lineTo(px, py);
 	    				context.stroke();
 	    				context.fill();
 		    		}else{
@@ -467,14 +648,15 @@
 
 		</head>
   	<body>
-		<canvas id ="canvas" width="800" height="600" style="border:1px solid #000000;" oncontextmenu="return false;" > 
+		<canvas id ="canvas" width="1024" height="786" style="border:1px solid #000000;" oncontextmenu="return false;" > 
 		</canvas>
 		<button onclick="drawPointMode()">Draw Points</button> 		
 		<button onclick="drawLineMode()">Draw Lines</button>
 		<button onclick="drawPoligonalMode()">Draw Poligonals</button>
 		<button onclick="drawPolygonMode()">Draw Polygons</button>
 		<button onclick="translateMode()">Pick</button>
-
+		<button onclick="rotateMode()">Rotate</button>
+		<button onclick="scaleMode()">Scale</button>
 
   	</body>
 </html>
