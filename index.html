@@ -22,7 +22,7 @@
 		    	points = [];
 		    	lines = [];
 		    	polygons = [];
-
+		    	centro = new Ponto(0,0);
 		    	pontoglobalgambiarrento = new Ponto(0,0);
 
 		    	pickPointId = -1;
@@ -407,8 +407,10 @@
 		    }
 
 		    function scale(x,y,p,centro){
-		    	/*var p0 = [];
+		    	var p0 = [];
+		    	console.log("x:"+x);
 		    	var mat = [[x,0,0], [0,y,0], [0,0,1]];
+		    	console.log(mat);
 		    	p = translate(p, new Ponto(-centro.x,-centro.y));
 		    	
 		    	p0.push([p.x]);
@@ -416,14 +418,12 @@
 		    	p0.push([1]);
 		    	
 			    p0=multMatriz(mat,p0);
-			    console.log(p0);
+			    //console.log(p0);
 			    p=translate(new Ponto(p0[0][0],p0[1][0]),centro);
 			    //console.log(p);
 
-			    return p;*/
-			    //console.log(console.log(centro));
-			    //return new Ponto(p.x*x,p.y*y);
 			    return p;
+			   
 		    }
 
 		    function getAngle(p1,p2){
@@ -518,12 +518,13 @@
 						centro.x+=polygons[pickPolygonId][i].start.x;
 						centro.y+=polygons[pickPolygonId][i].start.y;
 					}
+
 					centro.x=centro.x/polygons[pickPolygonId].length;
 					centro.y=centro.y/polygons[pickPolygonId].length;
-					console.log("centro:" + centro.x);
+
 					for(var i=0;i<polygons[pickPolygonId].length;i++){
-						polygons[pickPolygonId][i].start=scale(pontoglobalgambiarrento.x-px, pontoglobalgambiarrento.y-py, polygons[pickPolygonId][i].start, centro);
-						polygons[pickPolygonId][i].end=scale(pontoglobalgambiarrento.x-px, pontoglobalgambiarrento.y-py, polygons[pickPolygonId][i].end, centro);
+						polygons[pickPolygonId][i].start=scale((px-mouseprevstate.x)/100+1, (py-mouseprevstate.y)/100+1, polygons[pickPolygonId][i].start, centro);
+						polygons[pickPolygonId][i].end=scale((px-mouseprevstate.x)/100+1, (py-mouseprevstate.y)/100+1, polygons[pickPolygonId][i].end, centro);
 					}
 					
 				}
