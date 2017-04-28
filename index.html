@@ -137,8 +137,9 @@
 			    	pickPolygonId = -1;
 				}else if(mode=="rotateMode"){
 					mode="pickCenterRotation";
-				}else if(mode=="pickCenterRotation"){
 					pontoglobalgambiarrento = new Ponto(mousex,mousey);
+				}else if(mode=="pickCenterRotation"){
+					
 					rotate();
 				}else if(mode =="pickPointScale"){
 					pontoglobalgambiarrento = new Ponto(mousex, mousey);
@@ -430,18 +431,18 @@
 		    	return Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
 		    }
 
-		    function rotation(p1,p2){
+		    function rotation(p1,p2,p3){
 		    	var p0 = [];
-		    	var angle = getAngle(new Ponto(0,0),translate(p1,new Ponto(-p2.x,-p2.y)));		    	
-		    	var mat= [[Math.cos(angle), -Math.sin(angle), 0],
+		    	0 <= p2.x ? angle = 0.1:angle = -0.1;
+		    	p1 = translate(p1, new Ponto(-p3.x,-p3.y));
+		    	var mat = [[Math.cos(angle), -Math.sin(angle), 0],
 		    	[Math.sin(angle), Math.cos(angle), 0],
 		    	[0,0,1]];
 		    	p0.push([p1.x]);
 		    	p0.push([p1.y]);
 		    	p0.push([1]);
 		    	p0 = multMatriz(mat, p0);
-		    	var posRotate  = translate(new Ponto(p0[0][0], p0[1][0]), p2);
-		    	console.log(posRotate);
+		    	var posRotate  = translate(p3, new Ponto(p0[0][0], p0[1][0]));
 		    	return posRotate;
 		    }
 
@@ -534,13 +535,12 @@
 		    	*/
 		    	if(mode == "rotateModeLine"){
 		    		lines[pickLineId].start = rotation(lines[pickLineId].start,new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
-		    		lines[pickLineId].end = rotation(lines[pickLineId].end,new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+		    		lines[pickLineId].end = rotation(lines[pickLineId].end,new Ponto(px-mouseprevstate.x,py-mouseprevstate.y),pontoglobalgambiarrento);
 		    	}
 		    	if(mode == "rotateModePolygon"){
 		    		for(var i=0;i<polygons[pickPolygonId].length;i++){
-
-		    			polygons[pickPolygonId][i].start=rotation(new Ponto(polygons[pickPolygonId][i].start.x, polygons[pickPolygonId][i].start.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
-		    			polygons[pickPolygonId][i].end = rotation(new Ponto(polygons[pickPolygonId][i].end.x , polygons[pickPolygonId][i].end.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+		    			polygons[pickPolygonId][i].start = rotation(new Ponto(polygons[pickPolygonId][i].start.x, polygons[pickPolygonId][i].start.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y),  pontoglobalgambiarrento);
+		    			polygons[pickPolygonId][i].end = rotation(new Ponto(polygons[pickPolygonId][i].end.x , polygons[pickPolygonId][i].end.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y),pontoglobalgambiarrento);
 		    		}
 		    	}
 
