@@ -139,26 +139,28 @@
 					mode="pickCenterRotation";
 					pontoglobalgambiarrento = new Ponto(mousex,mousey);
 				}else if(mode=="pickCenterRotation"){
-					
 					rotate();
 				}else if(mode =="pickPointScale"){
 					pontoglobalgambiarrento = new Ponto(mousex, mousey);
 					scalepick();
+				}else if(mode == "scaleModeLine" || mode == "scaleModePoligonal" || mode == "scaleModePolygon"){
+					mode = "pickPointScale";
+				}else if(mode == "rotateModeLine" || mode == "rotateModePolygon" || mode == "rotateModePoint" || mode == "rotateModePoligonal"){
+					mode = "rotateMode";
 				}
 		    }
 
-		    function pickPonto(tol){
-		    	var px = event.clientX-rect.Left;
-		    	var py = event.clientY-rect.Top;
+		    function pickPonto(px,py,tol){
+		    	
 		    	for(var i = 0;i<points.length;i++){	
-		    		if(points[i].x>points[i].x-tol && points[i].x<px+tol && points[i].y>py-tol && points[i].y<py+tol){
+		    		if(px>points[i].x-tol && points[i].x+tol>px && points[i].y+tol>py && points[i].y-tol<py){
 		    			pickPointId = i;
 		    			console.log("pick ponto " + i);
-		    			return true;
+		    			return 1;
 		    		}
 		    	}
 
-		    	return false;
+		    	return -1;
 		    }
 
 		    function pickCode(x,y,xmin,xmax,ymin,ymax, cod){
@@ -262,9 +264,9 @@
 
 		    	console.log("tentativa de pick");
 
-		    	if(pickPonto(5)){
+		    	if(pickPonto(px,py,10)!= -1){
 		    		if(mode=="translateMode"){
-		    			mode="translateModePoint";
+		    			mode = "translateModePoint";
 		    		}
 					return true;  
 		    	}
@@ -303,13 +305,6 @@
 
 		    	console.log("tentativa de pick");
 
-		    	if(pickPonto(5)){
-		    		if(mode=="pickPointScale"){
-		    			mode="scaleModePoint";
-		    		}
-					return true;  
-		    	}
-
 		    	if(pickLinha(5,lines)!= -1){
 		    		pickLineId=pickLinha(1,lines);
 		    		if(mode=="pickPointScale"){
@@ -344,7 +339,7 @@
 
 		    	console.log("tentativa de pick");
 
-		    	if(pickPonto(5)){
+		    	if(pickPonto(px,py,5) != -1){
 		    		if(mode=="pickCenterRotation"){
 		    			mode="rotateModePoint";
 		    		}
@@ -452,7 +447,7 @@
 			    	for(var i = 0; i<tempLinesPoligonals.length-1; i++){
 			    		poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(tempLinesPoligonals[i+1].x, tempLinesPoligonals[i+1].y)));
 			    	}
-			    	poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(event.clientX-rect.left, event.clientY-rect.left)));
+			    	poligonalTemp.push(new Linha(new Ponto(tempLinesPoligonals[i].x, tempLinesPoligonals[i].y), new Ponto(event.clientX-rect.left, event.clientY-rect.top)));
 			    	tempLinesPoligonals = [];
 			    	poligonals.push(poligonalTemp);
 
@@ -471,7 +466,7 @@
 
 		    function biteTheDust(){
 		    	context.clearRect(0, 0, canvas.width, canvas.height);
-		    	
+		    	console.log(mode);
 		    	c.strokeStyle = "#df4b26";
 		    	c.lineWidth = 3;
 		    	var rect = canvas.getBoundingClientRect();
@@ -529,13 +524,47 @@
 					}
 					
 				}
+				if(mode == "scaleModePoligonal"){
+					var centro=new Ponto(0,0);
+					for(var i=0;i<poligonals[pickPoligonalId].length;i++){
+						centro.x+=poligonals[pickPoligonalId][i].start.x;
+						centro.y+=poligonals[pickPoligonalId][i].start.y;
+					}
+
+					centro.x=centro.x/poligonals[pickPoligonalId].length;
+					centro.y=centro.y/poligonals[pickPoligonalId].length;
+
+					for(var i=0;i<poligonals[pickPoligonalId].length;i++){
+						poligonals[pickPoligonalId][i].start=scale((px-mouseprevstate.x)/100+1, (py-mouseprevstate.y)/100+1, poligonals[pickPoligonalId][i].start, centro);
+						poligonals[pickPoligonalId][i].end=scale((px-mouseprevstate.x)/100+1, (py-mouseprevstate.y)/100+1, poligonals[pickPoligonalId][i].end, centro);
+					}
+					
+				}
+
+				if(mode == "scaleModeLine"){
+					var centro=new Ponto(lines[pickLineId].start.x+lines[pickLineId].end.x/2,lines[pickLineId].start.y+lines[pickLineId].end.y/2);
+					
+						lines[pickLineId].start=scale((px-mouseprevstate.x)/100+1, (py-mouseprevstate.y)/100+1, lines[pickLineId].start, centro);
+						lines[pickLineId].end=scale((px-mouseprevstate.x)/100+1, (py-mouseprevstate.y)/100+1, lines[pickLineId].end, centro);
+					
+					
+				}
 
 		    	/*
 		    	ROTAÇÕES
 		    	*/
+		    	if(mode == "rotateModePoint"){
+		    		points[pickPointId] = rotation(points[pickPointId], new Ponto(px-mouseprevstate.x,py-mouseprevstate.y),pontoglobalgambiarrento);
+		    	}
 		    	if(mode == "rotateModeLine"){
-		    		lines[pickLineId].start = rotation(lines[pickLineId].start,new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
+		    		lines[pickLineId].start = rotation(lines[pickLineId].start,new Ponto(px-mouseprevstate.x,py-mouseprevstate.y),pontoglobalgambiarrento);
 		    		lines[pickLineId].end = rotation(lines[pickLineId].end,new Ponto(px-mouseprevstate.x,py-mouseprevstate.y),pontoglobalgambiarrento);
+		    	}
+		    	if(mode == "rotateModePoligonal"){
+		    		for(var i=0;i<poligonals[pickPoligonalId].length;i++){
+		    			poligonals[pickPoligonalId][i].start = rotation(new Ponto(poligonals[pickPoligonalId][i].start.x, poligonals[pickPoligonalId][i].start.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y),  pontoglobalgambiarrento);
+		    			poligonals[pickPoligonalId][i].end = rotation(new Ponto(poligonals[pickPoligonalId][i].end.x , poligonals[pickPoligonalId][i].end.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y),pontoglobalgambiarrento);
+		    		}
 		    	}
 		    	if(mode == "rotateModePolygon"){
 		    		for(var i=0;i<polygons[pickPolygonId].length;i++){
