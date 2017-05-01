@@ -15,6 +15,7 @@
 	      		rect = canvas.getBoundingClientRect();
 		    	mode = "drawLine";
 		    	numPontosLinha=0;
+		    	mirrorLine = [];
 		    	tempPoints = [];
 		    	tempLinesPoligonals = [];
 		    	tempLinesPolygons = [];
@@ -92,6 +93,10 @@
 		    	mode="pickPointScale";
 		    	scalepick();
 		    }
+		    function mirrorMode(){
+		    	mode="mirrorMode";
+		    	biteTheDust();
+		    }
 			function addClick(x,y){
 
 				if (mode == "drawLine"){
@@ -147,6 +152,15 @@
 					mode = "pickPointScale";
 				}else if(mode == "rotateModeLine" || mode == "rotateModePolygon" || mode == "rotateModePoint" || mode == "rotateModePoligonal"){
 					mode = "rotateMode";
+				}else if(mode == "mirrorMode"){
+					if(numPontosLinha <2){
+						numPontosLinha++;
+						mirrorLine.push(new Ponto(mousex,mousey));
+						console.log(mirrorLine);
+					}
+					if(numPontosLinha==2){
+						mirrorPick();
+					}
 				}
 		    }
 
@@ -372,7 +386,48 @@
 		    		return true;
 		    	}	
 		    }
+		    function mirrorPick(){
+		    	var rect = canvas.getBoundingClientRect();
+		    	var px = event.clientX-rect.left;
+		    	var py = event.clientY-rect.top;
 
+		    	console.log("tentativa de pick");
+
+		    	if(pickPonto(px,py,5) != -1){
+		    		if(mode=="mirrorMode"){
+		    			mode="mirrorModePoint";
+		    		}
+					return true;  
+		    	}
+
+		    	if(pickLinha(5,lines)!= -1){
+		    		pickLineId=pickLinha(1,lines);
+		    		if(mode=="mirrorMode"){
+		    			mode="mirrorModeLine";
+		    		}
+		    		console.log(pickLineId);
+
+		    		return true
+		    	}
+		    	if(pickPoligonal(3) != -1){
+		    		console.log(pickPoligonalId);
+		    		if(mode=="mirrorMode"){
+		    			mode="mirrorModePoligonal";
+		    		}
+		    		
+		    		return true;
+		    	}
+		    	console.log("oi");
+		    	if(pickPolygon()!= -1){
+		    		if(mode=="mirrorMode"){
+		    			mode="mirrorModePolygon";
+		    		}
+		    		console.log(pickPolygonId);
+		    		return true;
+		    	}	
+		    }
+
+		    
 		    function multMatriz(mat1, mat2){
 		    	var i, j, k, s;
 		    	var matRes = [];
@@ -441,6 +496,53 @@
 		    	return posRotate;
 		    }
 
+		    function mirror(p1,p2,p3){
+		    	var p0 = [];
+
+		    	var memo1 = new Ponto(p1.x,p1.y);
+		    	var memo2 = new Ponto(p2.x,p2.y);
+		    	var memo3 = new Ponto(p3.x,p3.y);
+		    	
+		    	var aux1 = [];
+		    	var aux2 = [];
+		    	var aux3 = [];
+		    	//translação para a origem
+		    	var angle = getAngle(p2,p3);
+
+		    	console.log("angulo:"+angle);
+
+		    	p1 = translate(p1, new Ponto(-p2.x,-p2.y));
+		    	p3 = translate(p3, new Ponto(-p2.x,-p2.y));
+		    	//p2 = translate(p2, new Ponto (-p2.x,-p2.y));
+		    	//rotação para o eixo x
+		    	var mat = [[Math.cos(-angle), -Math.sin(-angle), 0],
+		    	[Math.sin(-angle), Math.cos(-angle), 0],
+		    	[0,0,1]];
+		    	p0.push([p1.x]);
+		    	p0.push([p1.y]);
+		    	p0.push([1]);
+		    	aux1 = multMatriz(mat, p0);
+		    	p0 = []
+		    	p0.push([aux1[0][0]]);
+		    	p0.push([aux1[1][0]]);
+		    	p0.push([1]);
+		    	console.log("Pos Rotações"+p0);
+		    	mat = [];
+		    	mat = [[1, 0, 0],
+		    	      [0, -1, 0],
+		    	      [0, 0, 1]];
+		    	p0 = multMatriz(mat,p0);
+		    	mat = [[Math.cos(angle), -Math.sin(angle), 0],
+		    	[Math.sin(angle), Math.cos(angle), 0],
+		    	[0,0,1]];
+		    	p0 = multMatriz(mat,p0);
+		    	mat = [[1, 0, p2.x],[0, 1, p2.y],[0, 0, 1]];
+		    	p0 = multMatriz(mat, p0);
+		    	console.log("pos translate:" + p0[0] );
+		    	p2=memo2;
+		    	p3=memo3;
+		    	return new Ponto(p0[0][0],p0[1][0]);
+		    }
 		    function rightClick(){
 		    	if(mode == "drawPoligonal"){
 			    	var poligonalTemp=[];
@@ -545,9 +647,7 @@
 					var centro=new Ponto(lines[pickLineId].start.x+lines[pickLineId].end.x/2,lines[pickLineId].start.y+lines[pickLineId].end.y/2);
 					
 						lines[pickLineId].start=scale((px-mouseprevstate.x)/100+1, (py-mouseprevstate.y)/100+1, lines[pickLineId].start, centro);
-						lines[pickLineId].end=scale((px-mouseprevstate.x)/100+1, (py-mouseprevstate.y)/100+1, lines[pickLineId].end, centro);
-					
-					
+						lines[pickLineId].end=scale((px-mouseprevstate.x)/100+1, (py-mouseprevstate.y)/100+1, lines[pickLineId].end, centro);	
 				}
 
 		    	/*
@@ -571,6 +671,34 @@
 		    			polygons[pickPolygonId][i].start = rotation(new Ponto(polygons[pickPolygonId][i].start.x, polygons[pickPolygonId][i].start.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y),  pontoglobalgambiarrento);
 		    			polygons[pickPolygonId][i].end = rotation(new Ponto(polygons[pickPolygonId][i].end.x , polygons[pickPolygonId][i].end.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y),pontoglobalgambiarrento);
 		    		}
+		    	}
+
+		    	/*
+		    	ESPELHAMENTO
+		    	*/
+		    	if(mode == "mirrorMode"){
+		    		if(numPontosLinha == 1){
+			    		context.beginPath();
+		    			context.moveTo(mirrorLine[0].x, mirrorLine[0].y);
+		    			context.lineTo(px,py);
+		    			context.stroke();
+		    			context.fill();
+						context.closePath();
+					}
+					if(numPontosLinha == 2){
+						context.beginPath();
+		    			context.moveTo(mirrorLine[0].x, mirrorLine[0].y);
+		    			context.lineTo(mirrorLine[1].x, mirrorLine[1].y);
+		    			context.stroke();
+		    			context.fill();
+						context.closePath();
+					}
+		    	}
+		    	if(mode == "mirrorModePoint"){
+		    		points[pickPointId] = mirror(points[pickPointId],mirrorLine[0],mirrorLine[1]);
+		    		numPontosLinha=0;
+					mirrorLine = [];
+					mode = "mirrorMode"
 		    	}
 
 		    	//Desenha pontos
@@ -610,6 +738,8 @@
 					context.closePath();
 	    		}
 
+
+
 	    		//Desenha, se tiver, uma linha que esteja incompleta, ou seja, sendo desenhada pelo usuario.
 	    		for(var i = 0; i<tempPoints.length;i++){
 	    			context.beginPath();
@@ -635,7 +765,6 @@
 	    			context.fill();
 					context.closePath();
 	    		}
-
 	    		//Desenha, se tiver, uma poligonal que esteja incompleta, ou seja, sendo desenhada pelo usuario.
 	    		for(var i = 0; i<tempLinesPoligonals.length; i++){
 	    			context.beginPath();
@@ -687,6 +816,7 @@
 		<button onclick="translateMode()">Pick</button>
 		<button onclick="rotateMode()">Rotate</button>
 		<button onclick="scaleMode()">Scale</button>
+		<button onclick="mirrorMode()">Espelhamento</button>
 
   	</body>
 </html>
