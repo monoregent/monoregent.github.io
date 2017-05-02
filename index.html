@@ -496,24 +496,21 @@
 		    	return posRotate;
 		    }
 
-		    function mirror(p1,p2,p3){
-		    	var p0 = [];
-
-		    	var memo1 = new Ponto(p1.x,p1.y);
-		    	var memo2 = new Ponto(p2.x,p2.y);
-		    	var memo3 = new Ponto(p3.x,p3.y);
-		    	
+		    function mirror(p,p0,p1){
+		    	/*var p0 = [];
+	    	
 		    	var aux1 = [];
-		    	var aux2 = [];
-		    	var aux3 = [];
 		    	//translação para a origem
 		    	var angle = getAngle(p2,p3);
-
+		    	if(angle <0){
+		    		angle+=360;
+		    	}
+		    	if(angle>360){
+		    		angle-=360;
+		    	}
 		    	console.log("angulo:"+angle);
 
 		    	p1 = translate(p1, new Ponto(-p2.x,-p2.y));
-		    	p3 = translate(p3, new Ponto(-p2.x,-p2.y));
-		    	//p2 = translate(p2, new Ponto (-p2.x,-p2.y));
 		    	//rotação para o eixo x
 		    	var mat = [[Math.cos(-angle), -Math.sin(-angle), 0],
 		    	[Math.sin(-angle), Math.cos(-angle), 0],
@@ -532,6 +529,7 @@
 		    	      [0, -1, 0],
 		    	      [0, 0, 1]];
 		    	p0 = multMatriz(mat,p0);
+		    	angle = angle*-1;
 		    	mat = [[Math.cos(angle), -Math.sin(angle), 0],
 		    	[Math.sin(angle), Math.cos(angle), 0],
 		    	[0,0,1]];
@@ -539,9 +537,17 @@
 		    	mat = [[1, 0, p2.x],[0, 1, p2.y],[0, 0, 1]];
 		    	p0 = multMatriz(mat, p0);
 		    	console.log("pos translate:" + p0[0] );
-		    	p2=memo2;
-		    	p3=memo3;
-		    	return new Ponto(p0[0][0],p0[1][0]);
+		    	return new Ponto(p0[0][0],p0[1][0]);*/
+		    	var dx, dy, a, b, x, y;
+
+		        dx = p1.x - p0.x;
+		        dy = p1.y - p0.y;
+		        a = (dx * dx - dy * dy) / (dx * dx + dy * dy);
+		        b = 2 * dx * dy / (dx * dx + dy * dy);
+		        x = Math.round(a * (p.x - p0.x) + b * (p.y - p0.y) + p0.x); 
+		        y = Math.round(b * (p.x - p0.x) - a * (p.y - p0.y) + p0.y);
+
+		        return new Ponto(x,y);
 		    }
 		    function rightClick(){
 		    	if(mode == "drawPoligonal"){
