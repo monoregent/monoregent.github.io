@@ -15,6 +15,7 @@
 	      		rect = canvas.getBoundingClientRect();
 		    	mode = "drawLine";
 		    	numPontosLinha=0;
+		    	numPontosLinha1=0;
 		    	mirrorLine = [];
 		    	tempPoints = [];
 		    	tempLinesPoligonals = [];
@@ -153,12 +154,12 @@
 				}else if(mode == "rotateModeLine" || mode == "rotateModePolygon" || mode == "rotateModePoint" || mode == "rotateModePoligonal"){
 					mode = "rotateMode";
 				}else if(mode == "mirrorMode"){
-					if(numPontosLinha <2){
-						numPontosLinha++;
+					if(numPontosLinha1 <2){
+						numPontosLinha1++;
 						mirrorLine.push(new Ponto(mousex,mousey));
 						console.log(mirrorLine);
 					}
-					if(numPontosLinha==2){
+					if(numPontosLinha1==2){
 						mirrorPick();
 					}
 				}
@@ -683,7 +684,7 @@
 		    	ESPELHAMENTO
 		    	*/
 		    	if(mode == "mirrorMode"){
-		    		if(numPontosLinha == 1){
+		    		if(numPontosLinha1 == 1){
 			    		context.beginPath();
 		    			context.moveTo(mirrorLine[0].x, mirrorLine[0].y);
 		    			context.lineTo(px,py);
@@ -691,7 +692,7 @@
 		    			context.fill();
 						context.closePath();
 					}
-					if(numPontosLinha == 2){
+					if(numPontosLinha1 == 2){
 						context.beginPath();
 		    			context.moveTo(mirrorLine[0].x, mirrorLine[0].y);
 		    			context.lineTo(mirrorLine[1].x, mirrorLine[1].y);
@@ -702,11 +703,39 @@
 		    	}
 		    	if(mode == "mirrorModePoint"){
 		    		points[pickPointId] = mirror(points[pickPointId],mirrorLine[0],mirrorLine[1]);
-		    		numPontosLinha=0;
+		    		numPontosLinha1=0;
 					mirrorLine = [];
 					mode = "mirrorMode"
 		    	}
-
+		    	if(mode == "mirrorModeLine"){
+		    		lines[pickLineId].start = mirror(lines[pickLineId].start,mirrorLine[0],mirrorLine[1]);
+		    		lines[pickLineId].end = mirror(lines[pickLineId].end,mirrorLine[0],mirrorLine[1]);
+		    		mirrorLine = [];
+		    		numPontosLinha1 = 0;
+		    		mode = "mirrorMode";
+		    	}
+		    	if(mode == "mirrorModePoligonal"){
+		    		console.log(poligonals[pickPoligonalId]);
+		    		for(var i=0; i<poligonals[pickPoligonalId].length;i++){
+		    			console.log("dentro loop");
+		    			poligonals[pickPoligonalId][i].start = mirror(poligonals[pickPoligonalId][i].start, mirrorLine[0], mirrorLine[1]);
+		    			poligonals[pickPoligonalId][i].end = mirror(poligonals[pickPoligonalId][i].end, mirrorLine[0], mirrorLine[1]);
+		    		}
+		    		mirrorLine = [];
+		    		numPontosLinha1 = 0;
+		    		mode = "mirrorMode";
+		    	}
+		    	if(mode == "mirrorModePolygon"){
+		    		console.log(polygons[pickPolygonId]);
+		    		for(var i=0; i<polygons[pickPolygonId].length;i++){
+		    			console.log("dentro loop");
+		    			polygons[pickPolygonId][i].start = mirror(polygons[pickPolygonId][i].start, mirrorLine[0], mirrorLine[1]);
+		    			polygons[pickPolygonId][i].end = mirror(polygons[pickPolygonId][i].end, mirrorLine[0], mirrorLine[1]);
+		    		}
+		    		mirrorLine = [];
+		    		numPontosLinha1 = 0;
+		    		mode = "mirrorMode";
+		    	}
 		    	//Desenha pontos
 		    	for(var i=0; i<points.length;i++){
 		    		context.strokeRect(points[i].x, points[i].y, 1, 1);
