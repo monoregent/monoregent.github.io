@@ -98,6 +98,29 @@
 		    	mode="mirrorMode";
 		    	biteTheDust();
 		    }
+		    function eraseMode(){
+		    	mode = "drawPolygon";
+		    	numPontosLinha=0;
+		    	numPontosLinha1=0;
+		    	mirrorLine = [];
+		    	tempPoints = [];
+		    	tempLinesPoligonals = [];
+		    	tempLinesPolygons = [];
+		    	poligonals = [];
+		    	points = [];
+		    	lines = [];
+		    	polygons = [];
+		    	centro = new Ponto(0,0);
+		    	pontoglobalgambiarrento = new Ponto(0,0);
+
+		    	pickPointId = -1;
+		    	pickLineId = -1;
+		    	pickPoligonalId = -1;
+		    	pickPolygonId = -1;
+
+		    	mouseprevstate = {x:0, y:0};
+		    	biteTheDust();
+		    }
 			function addClick(x,y){
 
 				if (mode == "drawLine"){
@@ -157,7 +180,7 @@
 					if(numPontosLinha1 <2){
 						numPontosLinha1++;
 						mirrorLine.push(new Ponto(mousex,mousey));
-						console.log(mirrorLine);
+						
 					}
 					if(numPontosLinha1==2){
 						mirrorPick();
@@ -170,7 +193,7 @@
 		    	for(var i = 0;i<points.length;i++){	
 		    		if(px>points[i].x-tol && points[i].x+tol>px && points[i].y+tol>py && points[i].y-tol<py){
 		    			pickPointId = i;
-		    			console.log("pick ponto " + i);
+		    			
 		    			return 1;
 		    		}
 		    	}
@@ -263,7 +286,7 @@
 		    		for(var j = 0; j<polygons[i].length; j++){
 			    		wn+=findAngle(polygons[i][j].start,new Ponto(px,py),polygons[i][j].end);
 			    	}
-			    	console.log(wn);
+			    	
 			    	if(wn>180){
 			    		pickPolygonId = i;
 			    		return 1;
@@ -277,7 +300,7 @@
 		    	var px = event.clientX-rect.left;
 		    	var py = event.clientY-rect.top;
 
-		    	console.log("tentativa de pick");
+		    	
 
 		    	if(pickPonto(px,py,10)!= -1){
 		    		if(mode=="translateMode"){
@@ -291,24 +314,24 @@
 		    		if(mode=="translateMode"){
 		    			mode="translateModeLine";
 		    		}
-		    		console.log(pickLineId);
+		    		
 
 		    		return true
 		    	}
 		    	if(pickPoligonal(3) != -1){
-		    		console.log(pickPoligonalId);
+		    		
 		    		if(mode=="translateMode"){
 		    			mode="translateModePoligonal";
 		    		}
 		    		
 		    		return true;
 		    	}
-		    	console.log("oi");
+		    	
 		    	if(pickPolygon()!= -1){
 		    		if(mode=="translateMode"){
 		    			mode="translateModePolygon";
 		    		}
-		    		console.log(pickPolygonId);
+		    		
 		    		return true;
 		    	}	
 		    }
@@ -318,31 +341,31 @@
 		    	var px = event.clientX-rect.left;
 		    	var py = event.clientY-rect.top;
 
-		    	console.log("tentativa de pick");
+		    	
 
 		    	if(pickLinha(5,lines)!= -1){
 		    		pickLineId=pickLinha(1,lines);
 		    		if(mode=="pickPointScale"){
 		    			mode="scaleModeLine";
 		    		}
-		    		console.log(pickLineId);
+		    		
 
 		    		return true
 		    	}
 		    	if(pickPoligonal(3) != -1){
-		    		console.log(pickPoligonalId);
+		    		
 		    		if(mode=="pickPointScale"){
 		    			mode="scaleModePoligonal";
 		    		}
 		    		
 		    		return true;
 		    	}
-		    	console.log("oi");
+		    
 		    	if(pickPolygon()!= -1){
 		    		if(mode=="pickPointScale"){
 		    			mode="scaleModePolygon";
 		    		}
-		    		console.log(pickPolygonId);
+		    		
 		    		return true;
 		    	}	
 		    }
@@ -352,7 +375,7 @@
 		    	var px = event.clientX-rect.left;
 		    	var py = event.clientY-rect.top;
 
-		    	console.log("tentativa de pick");
+	
 
 		    	if(pickPonto(px,py,5) != -1){
 		    		if(mode=="pickCenterRotation"){
@@ -366,24 +389,24 @@
 		    		if(mode=="pickCenterRotation"){
 		    			mode="rotateModeLine";
 		    		}
-		    		console.log(pickLineId);
+		    		
 
 		    		return true
 		    	}
 		    	if(pickPoligonal(3) != -1){
-		    		console.log(pickPoligonalId);
+		    		
 		    		if(mode=="pickCenterRotation"){
 		    			mode="rotateModePoligonal";
 		    		}
 		    		
 		    		return true;
 		    	}
-		    	console.log("oi");
+		    
 		    	if(pickPolygon()!= -1){
 		    		if(mode=="pickCenterRotation"){
 		    			mode="rotateModePolygon";
 		    		}
-		    		console.log(pickPolygonId);
+		    	
 		    		return true;
 		    	}	
 		    }
@@ -392,7 +415,7 @@
 		    	var px = event.clientX-rect.left;
 		    	var py = event.clientY-rect.top;
 
-		    	console.log("tentativa de pick");
+		    
 
 		    	if(pickPonto(px,py,5) != -1){
 		    		if(mode=="mirrorMode"){
@@ -406,24 +429,23 @@
 		    		if(mode=="mirrorMode"){
 		    			mode="mirrorModeLine";
 		    		}
-		    		console.log(pickLineId);
+		    	
 
 		    		return true
 		    	}
 		    	if(pickPoligonal(3) != -1){
-		    		console.log(pickPoligonalId);
+		    	
 		    		if(mode=="mirrorMode"){
 		    			mode="mirrorModePoligonal";
 		    		}
 		    		
 		    		return true;
 		    	}
-		    	console.log("oi");
+	
 		    	if(pickPolygon()!= -1){
 		    		if(mode=="mirrorMode"){
 		    			mode="mirrorModePolygon";
 		    		}
-		    		console.log(pickPolygonId);
 		    		return true;
 		    	}	
 		    }
@@ -460,9 +482,9 @@
 
 		    function scale(x,y,p,centro){
 		    	var p0 = [];
-		    	console.log("x:"+x);
+		    	
 		    	var mat = [[x,0,0], [0,y,0], [0,0,1]];
-		    	console.log(mat);
+		
 		    	p = translate(p, new Ponto(-centro.x,-centro.y));
 		    	
 		    	p0.push([p.x]);
@@ -470,9 +492,9 @@
 		    	p0.push([1]);
 		    	
 			    p0=multMatriz(mat,p0);
-			    //console.log(p0);
+			  
 			    p=translate(new Ponto(p0[0][0],p0[1][0]),centro);
-			    //console.log(p);
+			 
 
 			    return p;
 			   
@@ -509,7 +531,7 @@
 		    	if(angle>360){
 		    		angle-=360;
 		    	}
-		    	console.log("angulo:"+angle);
+		    
 
 		    	p1 = translate(p1, new Ponto(-p2.x,-p2.y));
 		    	//rotação para o eixo x
@@ -524,7 +546,7 @@
 		    	p0.push([aux1[0][0]]);
 		    	p0.push([aux1[1][0]]);
 		    	p0.push([1]);
-		    	console.log("Pos Rotações"+p0);
+		  
 		    	mat = [];
 		    	mat = [[1, 0, 0],
 		    	      [0, -1, 0],
@@ -537,7 +559,7 @@
 		    	p0 = multMatriz(mat,p0);
 		    	mat = [[1, 0, p2.x],[0, 1, p2.y],[0, 0, 1]];
 		    	p0 = multMatriz(mat, p0);
-		    	console.log("pos translate:" + p0[0] );
+		    	
 		    	return new Ponto(p0[0][0],p0[1][0]);*/
 		    	var dx, dy, a, b, x, y;
 
@@ -575,7 +597,7 @@
 
 		    function biteTheDust(){
 		    	context.clearRect(0, 0, canvas.width, canvas.height);
-		    	console.log(mode);
+		    
 		    	c.strokeStyle = "#df4b26";
 		    	c.lineWidth = 3;
 		    	var rect = canvas.getBoundingClientRect();
@@ -592,7 +614,7 @@
 		    		if(pickLineId != -1){
 			    		lines[pickLineId].start = translate(new Ponto(lines[pickLineId].start.x, lines[pickLineId].start.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
 			    		lines[pickLineId].end = translate(new Ponto(lines[pickLineId].end.x , lines[pickLineId].end.y), new Ponto(px-mouseprevstate.x,py-mouseprevstate.y));
-			    		console.log(lines[pickLineId]);
+			    	
 		    		}
 		    	}
 
@@ -715,9 +737,9 @@
 		    		mode = "mirrorMode";
 		    	}
 		    	if(mode == "mirrorModePoligonal"){
-		    		console.log(poligonals[pickPoligonalId]);
+		    		
 		    		for(var i=0; i<poligonals[pickPoligonalId].length;i++){
-		    			console.log("dentro loop");
+		    		
 		    			poligonals[pickPoligonalId][i].start = mirror(poligonals[pickPoligonalId][i].start, mirrorLine[0], mirrorLine[1]);
 		    			poligonals[pickPoligonalId][i].end = mirror(poligonals[pickPoligonalId][i].end, mirrorLine[0], mirrorLine[1]);
 		    		}
@@ -726,9 +748,9 @@
 		    		mode = "mirrorMode";
 		    	}
 		    	if(mode == "mirrorModePolygon"){
-		    		console.log(polygons[pickPolygonId]);
+		    	
 		    		for(var i=0; i<polygons[pickPolygonId].length;i++){
-		    			console.log("dentro loop");
+		    			
 		    			polygons[pickPolygonId][i].start = mirror(polygons[pickPolygonId][i].start, mirrorLine[0], mirrorLine[1]);
 		    			polygons[pickPolygonId][i].end = mirror(polygons[pickPolygonId][i].end, mirrorLine[0], mirrorLine[1]);
 		    		}
@@ -842,8 +864,9 @@
 
 		</head>
   	<body>
-		<canvas id ="canvas" width="1024" height="786" style="border:1px solid #000000;" oncontextmenu="return false;" > 
+		<canvas id ="canvas" width="800" height="600" style="border:1px solid #000000;" oncontextmenu="return false;" > 
 		</canvas>
+		<div>
 		<button onclick="drawPointMode()">Draw Points</button> 		
 		<button onclick="drawLineMode()">Draw Lines</button>
 		<button onclick="drawPoligonalMode()">Draw Poligonals</button>
@@ -852,6 +875,7 @@
 		<button onclick="rotateMode()">Rotate</button>
 		<button onclick="scaleMode()">Scale</button>
 		<button onclick="mirrorMode()">Espelhamento</button>
-
+		<button onclick="eraseMode()">Apagar</button>
+		</div>
   	</body>
 </html>
