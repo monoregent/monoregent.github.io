@@ -26,12 +26,12 @@
 		    	polygons = [];
 		    	centro = new Ponto(0,0);
 		    	pontoglobalgambiarrento = new Ponto(0,0);
-
+		    	convexhull =[];
 		    	pickPointId = -1;
 		    	pickLineId = -1;
 		    	pickPoligonalId = -1;
 		    	pickPolygonId = -1;
-
+		    	p0 = new Ponto(0,0);
 		    	mouseprevstate = {x:0, y:0};
 		   	}	
 
@@ -97,6 +97,14 @@
 		    function mirrorMode(){
 		    	mode="mirrorMode";
 		    	biteTheDust();
+		    }
+		    function areaMode(){
+		    	mode="polygonArea";
+		    	biteTheDust();
+		    }
+		    function convexMode(){
+		    	mode="convexMode";
+		    	convexHull();
 		    }
 		    function eraseMode(){
 		    	mode = "drawPolygon";
@@ -185,6 +193,8 @@
 					if(numPontosLinha1==2){
 						mirrorPick();
 					}
+				}else if(mode=="polygonArea"){
+					pickPolygonArea();
 				}
 		    }
 
@@ -302,7 +312,7 @@
 
 		    	
 
-		    	if(pickPonto(px,py,10)!= -1){
+		    	if(pickPonto(px,py,15)!= -1){
 		    		if(mode=="translateMode"){
 		    			mode = "translateModePoint";
 		    		}
@@ -368,6 +378,22 @@
 		    		
 		    		return true;
 		    	}	
+		    }
+
+		    function pickPolygonArea(){
+		    	if(pickPolygon()!=-1){
+
+						var area = 0;
+						for(var i = 1; i+1<polygons[pickPolygonId].length; i++){
+							var x1 = polygons[pickPolygonId][i].start.x - polygons[pickPolygonId][0].start.x;
+							var y1 = polygons[pickPolygonId][i].start.y - polygons[pickPolygonId][0].start.y;
+						    var x2 = polygons[pickPolygonId][i+1].start.x - polygons[pickPolygonId][0].start.x;
+						    var y2 =  polygons[pickPolygonId][i+1].start.y - polygons[pickPolygonId][0].start.y;
+						    var cross = x1*y2 - x2*y1;
+						    area += cross; 
+						}
+						console.log(Math.abs(area/2.0));
+					}
 		    }
 
 		    function rotate(){
@@ -504,6 +530,9 @@
 		    	return Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
 		    }
 
+		    function getAngleRad(p1,p2){
+		    	return Math.atan2(p1.y - p2.y, p1.x - p2.x);
+		    }
 		    function rotation(p1,p2,p3){
 		    	var p0 = [];
 		    	0 <= p2.x ? angle = 0.1:angle = -0.1;
@@ -571,6 +600,139 @@
 		        y = Math.round(b * (p.x - p0.x) - a * (p.y - p0.y) + p0.y);
 
 		        return new Ponto(x,y);
+		    }
+
+		    function truncAngle(a){
+			    while(a < 0)
+			    {
+			      a += 2*Math.PI;
+			    }
+			    while(a > 2*Math.PI)
+			    {
+			      a -= 2*Math.PI;
+			    }
+			    return a;
+		  	}
+		    function getOrientation(p1, p2, p3){
+			    var p2Angle = truncAngle(getAngleRad(p1,p2));
+			    var p3Angle = truncAngle(getAngleRad(p1,p3));
+			    return p2Angle == p3Angle ? 0 : p2Angle > p3Angle ? 1 : 2;  
+		  	}
+		  	function dist(p1, p2){
+		    	return Math.sqrt(Math.pow(p1.x - p2.x,2) + Math.pow(p1.y - p2.y,2));
+		  	}
+		    function compare(p1, p2){
+			    var orientation = getOrientation(p0, p1, p2);
+			    if(orientation == 0){
+			    	if(dist(p0,p2)>=dist(p0,p1)){
+			    		return -1;
+			    	}else{
+			    		return 1;
+			    	}
+			    }else{
+			    	if(orientation==2){return -1;}
+			    		else{return 1;}
+			    }
+		  	}
+		    function convexHull(){
+		    	var aux=[];
+		    	var min = new Ponto(0,0);
+		    	var id;
+		    	for(var i = 0; i<points.length;i++){
+		    		aux.push(points[i]);
+		    		if(points[i].y>min.y){
+		    			min=points[i];
+		    			id=aux.length-1;
+		    		}
+		    	}
+		    	for(var i = 0; i<lines.length;i++){
+		    		aux.push(lines[i].start);
+		    		if(lines[i].start.y>min.y){
+		    			min=lines[i].start;
+		    			id=aux.length-1;
+		    		}
+		    		if(i==lines.length-1){
+		    			aux.push(lines[i].end);
+		    			if(lines[i].end.y>min.y){
+		    				min=lines[i].end;
+		    				id=aux.length-1;
+		    			}
+		    		}
+		    	}
+		    	for(var i = 0; i<poligonals.length; i++){
+		    		for(var j = 0; j<poligonals[i].length;j++){
+		    			aux.push(poligonals[i][j].start);
+		    			if(poligonals[i][j].start.y>min.y){
+		    				min=poligonals[i][j].start;
+		    				id=aux.length-1;
+		    			}
+		    			if(j==poligonals[i].length-1){
+		    				aux.push(poligonals[i][j].end);
+		    				if(poligonals[i][j].end.y>min.y){
+		    					min=poligonals[i][j].end;
+		    					id=aux.length-1;
+		    				}
+		    			}
+		    		}
+		    	}
+		    	for(var i = 0; i<polygons.length; i++){
+		    		for(var j = 0; j<polygons[i].length;j++){
+		    			aux.push(polygons[i][j].start);
+		    			if(polygons[i][j].start.y>min.y){
+		    				min=polygons[i][j].start;
+		    				id=aux.length-1;
+		    			}
+		    		}
+		    	}
+		    	var paux = new Ponto(aux[0].x,aux[0].y);
+		    	aux[0]=aux[id];
+		    	aux[id]=paux;
+		    	p0=min;
+		    	var auxArray=[];
+		    	for(var i = 1; i<aux.length;i++){
+		    		auxArray.push(aux[i]);
+		    	}
+		    	auxArray.sort(compare);
+		    	var hullSize=0;
+		    	for(var i = 0; i<auxArray.length;i++){
+		    		while(i < auxArray.length-1 && getOrientation(p0, auxArray[i], auxArray[i+1]) == 0){
+		    			i++;
+		    		}
+		    		auxArray[hullSize] = auxArray[i];
+		    		hullSize++;
+		    	}
+		    	if(hullSize>1){
+		    		convexhull.push(p0);
+		    		convexhull.push(auxArray[0]);
+		    		convexhull.push(auxArray[1]);
+		    		var top = 2;
+		    		for(var i = 2; i<hullSize; i++){
+		    			while(getOrientation(convexhull[top-1],convexhull[top],auxArray[i]) != 2){
+		    				convexhull.pop();
+		    				top--;
+		    			}
+
+			    		//console.log(auxArray[i]);
+			    		//console.log("elemento "+i+" do array:"+auxArray[i]);
+			    		convexhull.push(auxArray[i]);
+			    		top++;
+		    		}
+		    		context.strokeStyle = "#FF0000"
+		    		for(var i = 0; i<convexhull.length-1;i++){
+		    			context.beginPath();
+		    			context.moveTo(convexhull[i].x, convexhull[i].y);
+		    			context.lineTo(convexhull[i+1].x,convexhull[i+1].y);
+		    			context.stroke();
+		    			context.fill();
+						context.closePath();
+		    		}
+		    		context.beginPath();
+	    			context.moveTo(convexhull[convexhull.length-1].x, convexhull[convexhull.length-1].y);
+	    			context.lineTo(convexhull[0].x,convexhull[0].y);
+	    			context.stroke();
+	    			context.fill();
+					context.closePath();
+		    	}
 		    }
 		    function rightClick(){
 		    	if(mode == "drawPoligonal"){
@@ -758,6 +920,15 @@
 		    		numPontosLinha1 = 0;
 		    		mode = "mirrorMode";
 		    	}
+
+		    	/*
+		    	FECHO CONVEXO
+		    	*/
+		    	/*if(mode=="convexMode"){
+		    		console.log(convexhull);
+		    		
+		    	}*/
+
 		    	//Desenha pontos
 		    	for(var i=0; i<points.length;i++){
 		    		context.strokeRect(points[i].x, points[i].y, 1, 1);
@@ -875,6 +1046,8 @@
 		<button onclick="rotateMode()">Rotate</button>
 		<button onclick="scaleMode()">Scale</button>
 		<button onclick="mirrorMode()">Espelhamento</button>
+		<button onclick="areaMode()">Area de poligono</button>
+		<button onclick="convexMode()">Fecho Convexo</button>
 		<button onclick="eraseMode()">Apagar</button>
 		</div>
   	</body>
